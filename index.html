@@ -10,37 +10,47 @@
 <body>
 <header>
   <div class="brand"><h1>ÓRBITA</h1><span>Tu semana como sistema solar</span></div>
-  <div id="score"><b>000%</b><span>cumplimiento</span></div>
+  <div id="score"><b></b><span></span></div>
 </header>
 <nav class="tabs" aria-label="Secciones">
   <button data-v="cielo" class="on">Cielo</button>
-  <button data-v="semana">Semana</button>
-  <button data-v="act">Actividades</button>
+  <button data-v="bit">Bitácora</button>
+  <button data-v="sem">Semana</button>
+  <button data-v="act">Planetas</button>
   <button data-v="bal">Balance</button>
 </nav>
 <main>
   <section id="v-cielo" class="view on">
     <div id="now" class="now"></div>
-    <div class="seg" id="modeSeg" role="group" aria-label="Qué mostrar">
-      <button data-m="plan" class="on">Planeado</button><button data-m="real">Real</button>
-    </div>
+    <div class="per"></div>
     <div class="sky"><canvas id="sky" aria-label="Sistema solar de actividades"></canvas></div>
     <ul id="legend"></ul>
   </section>
-  <section id="v-semana" class="view">
-    <div id="dayTabs" class="dtabs"></div>
+  <section id="v-bit" class="view">
+    <div class="rowhead">
+      <div class="weeknav"><button id="bPrev" aria-label="Semana anterior">‹</button><span id="bLbl"></span><button id="bNext" aria-label="Semana siguiente">›</button></div>
+      <div class="weeknav"><button id="bHoy">Hoy</button><input type="date" id="bGo" aria-label="Ir a una fecha"></div>
+    </div>
+    <div id="dTabs" class="dtabs"></div>
     <div id="blocks"></div>
-    <button id="addB" class="go fab">+ Nuevo bloque</button>
+    <button id="addD" class="go fab">+ Nuevo bloque</button>
+  </section>
+  <section id="v-sem" class="view">
+    <h2>Semana regular</h2>
+    <p class="hint">Tu semana tipo. La bitácora la copia a cada fecha; ahí podés cambiar días puntuales sin tocar esta.</p>
+    <div id="wTabs" class="dtabs"></div>
+    <div id="wBlocks"></div>
+    <button id="addW" class="go fab">+ Nuevo bloque</button>
   </section>
   <section id="v-act" class="view">
-    <div class="rowhead"><h2>Actividades</h2><button id="addA" class="go">+ Nueva</button></div>
-    <p class="hint">Cada actividad es un planeta. Tocá una para editarla, o ▶ para medir tu tiempo real.</p>
+    <div class="rowhead"><h2>Planetas</h2><button id="addA" class="go">+ Nuevo</button></div>
+    <p class="hint" id="actHint"></p>
     <ul id="acts"></ul>
   </section>
   <section id="v-bal" class="view">
-    <div class="rowhead"><h2>Balance de la semana</h2>
-      <div class="weeknav"><button id="prev" aria-label="Semana anterior">‹</button><span id="weekLbl"></span><button id="next" aria-label="Semana siguiente">›</button></div>
-    </div>
+    <h2>Balance</h2>
+    <div class="per"></div>
+    <div id="stack" class="stack"></div>
     <div id="review"></div>
     <div class="data"><button id="exp">Exportar datos</button><label class="btn">Importar datos<input type="file" id="imp" accept=".json" hidden></label></div>
   </section>
@@ -50,16 +60,19 @@
   <label>Actividad<select id="bA"></select></label>
   <label>Título (opcional)<input id="bT" maxlength="40" placeholder="Ej. Uber, Cena y familia"></label>
   <div class="two"><label>Desde<input type="time" id="bS" required></label><label>Hasta<input type="time" id="bE" required></label></div>
-  <p class="hint" id="bH">Si "Hasta" es anterior a "Desde", el bloque sigue después de medianoche. Un 00:00 final es el fin del día.</p>
-  <div class="hint">Días</div><div class="chips" id="bD"></div>
+  <div id="bWK"><div class="hint">Días de la semana</div><div class="chips" id="bD"></div></div>
+  <div id="bDT">
+    <div class="two"><label>Fecha<input type="date" id="bF"></label><label>Hasta la fecha (opcional)<input type="date" id="bU"></label></div>
+    <label>Se repite<select id="bR"><option value="">No</option><option value="m">Todos los meses</option><option value="y">Todos los años</option></select></label>
+  </div>
+  <p class="hint" id="bH"></p>
   <menu><button type="button" class="danger" id="bDel">Eliminar</button><button type="button" id="bX">Cancelar</button><button class="go">Guardar</button></menu>
 </form></dialog>
 <dialog id="dA"><form id="fA">
-  <h3 id="dAt">Nueva actividad</h3>
+  <h3 id="dAt">Nuevo planeta</h3>
   <label>Nombre<input id="aN" maxlength="40" required></label>
   <label>Color<input type="color" id="aC" value="#27f5c9"></label>
   <label class="chk"><input type="checkbox" id="aK"> Va en el centro (el sol)</label>
-  <div id="aR" class="real"><span>Real esta semana: <b id="aRv"></b></span><span><button type="button" data-adj="-30">−30 min</button> <button type="button" data-adj="30">+30 min</button></span></div>
   <menu><button type="button" class="danger" id="aDel">Eliminar</button><button type="button" id="aX">Cancelar</button><button class="go">Guardar</button></menu>
 </form></dialog>
 <script src="js/app.js"></script>
