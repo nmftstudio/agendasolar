@@ -139,10 +139,10 @@ function recalc() {
 /* ---------- Pestañas y periodo ---------- */
 function show(v) {
   $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
-  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $$('.tabs button').forEach(b => { const on = b.dataset.v === v; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   try { window.scrollTo(0, 0); } catch (e) {} resize(); if (v === 'cos') renderCos(); if (v === 'not') { if (nAuto) $('#nWhen').value = dI(new Date()); renderNotes(); }
 }
-$('.tabs').onclick = e => { if (e.target.dataset.v) show(e.target.dataset.v); };
+$('.tabs').onclick = e => { const b = e.target.closest('[data-v]'); if (b) show(b.dataset.v); };
 function renderPer() {
   const h = `<div class="seg">${[['w', 'Semana'], ['m', 'Mes'], ['y', 'Año']].map(([k, n]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${n}</button>`).join('')}</div>
     <div class="weeknav"><button data-n="-1" aria-label="Anterior">‹</button><span>${perLabel(per, pref)}</span><button data-n="1" aria-label="Siguiente">›</button><button data-n="0">Hoy</button></div>`;

@@ -103,7 +103,7 @@ Una pestaña aparte para escribir texto libre que queda registrado con **fecha, 
 - Migración automática desde versiones anteriores de los datos (`orbita.v4`).
 - Cronograma semanal en **PDF** y pestaña **Cosmos** con el cielo de tu ubicación y su **Oráculo**.
 - Pestaña **Notas**: diario con fecha y hora, búsqueda y línea de tiempo.
-- Interfaz oscura, mobile-first, con barra de pestañas inferior en móvil y superior en escritorio. Soporta pantallas con notch.
+- Interfaz oscura, mobile-first, con barra de pestañas inferior en móvil y superior en escritorio. Cada pestaña tiene su ícono (SVG propio, sin librerías): en el celular la pestaña activa muestra además su nombre; en escritorio se ven ícono y texto siempre. Soporta pantallas con notch.
 
 ## Datos y privacidad
 
