@@ -139,7 +139,7 @@ function recalc() {
 function show(v) {
   $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  try { window.scrollTo(0, 0); } catch (e) {} resize();
+  try { window.scrollTo(0, 0); } catch (e) {} resize(); if (v === 'cos') renderCos();
 }
 $('.tabs').onclick = e => { if (e.target.dataset.v) show(e.target.dataset.v); };
 function renderPer() {
@@ -178,7 +178,7 @@ function nightLine(k) {
 }
 function renderBit() {
   const sd = pdt(sel), mon = monday(sd), t = ds(today()), cust = !!S.days[sel], past = sel < t;
-  $('#bLbl').textContent = perLabel('w', mon); $('#bGo').value = sel;
+  $('#bLbl').textContent = perLabel('w', mon); $('#bGo').value = sel; $('#pdfHint').textContent = 'El cronograma PDF usa la semana que ves en Bitácora: ' + perLabel('w', mon) + '.';
   $('#dTabs').innerHTML = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = addD(mon, i), k = ds(d); return `<button data-k="${k}" class="${k === sel ? 'on' : ''}${k === t ? ' hoy' : ''}">${D3[i]}<small>${d.getDate()}${S.days[k] ? (S.fix[k] ? ' ✎' : ' •') : ''}</small></button>`; }).join('');
   const bl = dayBlocks(sel), used = usedOf(bl), nl = nightLine(sel);
   const note = past ? (cust ? (S.fix[sel] ? (sel < S.start ? 'Registro cargado a mano.' : 'Registro corregido: lo que hiciste difiere de lo planificado.') : 'Registrado según lo planificado. Si hiciste otra cosa, tocá el bloque y corregilo.') : `Sin registro: la bitácora empezó el ${fd(S.start)}. Podés cargar lo que hiciste ese día.`)
@@ -321,6 +321,25 @@ $('#imp').onchange = e => {
   rd.readAsText(f); e.target.value = '';
 };
 
+$('#expPdf').onclick = () => { // cronograma semanal en PDF: la semana que se ve en la Bitácora
+  if (!window.OrbitaPDF) { alert('No se pudo cargar el generador de PDF.'); return; }
+  const mon = monday(pdt(sel)), t = ds(today()), mins = {}, days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addD(mon, i), k = ds(d), bl = !S.days[k] && k < S.start ? proj(k) : dayBlocks(k); // antes del inicio de la bitácora se muestra la semana regular
+    days.push({ label: `${D3[i]} ${d.getDate()}`, today: k === t, blocks: bl.map(b => ({ s: b.s, e: b.e, label: lab(b), color: (act(b.a) || {}).color || '#888888' })) });
+    bl.forEach(b => { mins[b.a] = (mins[b.a] || 0) + b.e - b.s; });
+  }
+  const sun = addD(mon, 6), span = `${mon.getDate()}${mon.getMonth() !== sun.getMonth() ? ' ' + MES[mon.getMonth()] : ''}–${sun.getDate()} ${MES[sun.getMonth()]} ${sun.getFullYear()}`;
+  const bytes = OrbitaPDF.weekly({
+    title: 'ÓRBITA · Cronograma semanal', subtitle: `Semana ${isoWeek(mon)} · ${span}`, days,
+    legend: S.activities.filter(a => mins[a.id]).map(a => ({ name: a.name, color: a.color, hours: fmtH(mins[a.id] / 60) })),
+    footer: `Órbita · Studio NMFT · generado el ${fd(t)}`, docTitle: `Cronograma semanal ${ds(mon)}`
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+  a.download = 'orbita-cronograma-' + ds(mon) + '.pdf'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
 /* ---------- Cielo ---------- */
 function renderNow() {
   const l = dayBlocks(ds(today())), m = nowMin(), b = l.find(x => x.s <= m && m < x.e), n = l.find(x => x.s > m);
@@ -390,13 +409,148 @@ function draw(t) {
   if (W && H && cv.offsetParent !== null) { try { paint(t); } catch (e) { console.error(e); } }
 }
 
+/* ---------- Cosmos: el cielo situado en tu ubicación ---------- */
+const GEOK = 'orbita.geo', DEFGEO = { lat: -31.42, lon: -64.19, name: 'Córdoba, Argentina (aprox.)', def: 1 };
+function loadGeo() {
+  try { const g = JSON.parse(localStorage.getItem(GEOK)); if (g && Math.abs(g.lat) <= 90 && Math.abs(g.lon) <= 180) return { lat: +g.lat, lon: +g.lon, name: String(g.name || '').slice(0, 40) }; } catch (e) {}
+  return DEFGEO;
+}
+let geo = loadGeo(), cdate = ds(today()), cmin = null, CD = null, lastCos = -1;
+const tm = ms => { if (ms == null) return '—'; const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const tmd = ms => { const d = new Date(ms); return `${d.getDate()} ${MES[d.getMonth()]} ${tm(ms)}`; };
+const mix = (a, b, k) => { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * k).toString(16).padStart(2, '0')).join(''); };
+const geoTxt = () => geo.name || `${Math.abs(geo.lat).toFixed(2)}° ${geo.lat < 0 ? 'S' : 'N'}, ${Math.abs(geo.lon).toFixed(2)}° ${geo.lon < 0 ? 'O' : 'E'}`;
+const hz = id => id === 'luna' ? -0.833 : -0.6;
+const SKYC = ['#3a76ad', '#6b5ea8', '#37366f', '#1a1d44', '#070914'];
+const skyCls = a => a > -0.833 ? 0 : a > -6 ? 1 : a > -12 ? 2 : a > -18 ? 3 : 4;
+const runs = (n, f) => { const o = []; let a = -1; for (let i = 0; i < n; i++) { if (f(i)) { if (a < 0) a = i; } else if (a >= 0) { o.push([a, i]); a = -1; } } if (a >= 0) o.push([a, n]); return o; };
+const kv = rows => `<div class="kv">${rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('')}</div>`;
+function rsText(b) {
+  const a = [['Sale', b.rise], ['Se pone', b.set]].filter(x => x[1] != null).sort((x, y) => x[1] - y[1]);
+  return a.length ? a.map(x => `${x[0]} ${tm(x[1])}`).join(' · ') : b.always ? 'Todo el día sobre el horizonte' : 'No sale este día';
+}
+function moonShape(c, x, y, r, ph) { // la Luna vista desde tu hemisferio (en el sur se ve "invertida")
+  const e = ph.elong * Math.PI / 180, a = r * Math.abs(Math.cos(e)), crescent = Math.cos(e) > 0, right = ph.waxing !== (geo.lat < 0);
+  c.save(); c.fillStyle = '#1b2433'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.fillStyle = '#f4efdc'; c.beginPath();
+  if (right) { c.arc(x, y, r, -Math.PI / 2, Math.PI / 2, false); c.ellipse(x, y, a, r, 0, Math.PI / 2, -Math.PI / 2, crescent); }
+  else { c.arc(x, y, r, Math.PI / 2, Math.PI * 1.5, false); c.ellipse(x, y, a, r, 0, Math.PI * 1.5, Math.PI / 2, crescent); }
+  c.fill(); c.restore();
+}
+function renderCos() {
+  if (!window.Cosmos) { $('#cPlace').textContent = 'No se pudo cargar el módulo astronómico.'; return; }
+  const d0 = pdt(cdate), t0 = d0.getTime(), t1 = addD(d0, 1).getTime(), isT = cdate === ds(today()), ref = isT ? Date.now() : t0 + 12 * 3600000;
+  CD = Cosmos.day(t0, t1, geo.lat, geo.lon);
+  const n = CD.n, A = CD.alts;
+  $('#cPlace').innerHTML = `${esc(geoTxt())}${geo.def ? ' · tocá <b>Ubicación</b> para ajustarla a tu lugar' : ''}`;
+  $('#cLbl').textContent = `${D3[dow(d0)]} ${d0.getDate()} ${MES[d0.getMonth()]} ${d0.getFullYear()}`;
+  /* Sol */
+  const s = CD.sun, z = Cosmos.zodiac(Cosmos.pos('sol', ref).lon2000), ns = Cosmos.nextSeason(ref);
+  const SN = geo.lat < 0 ? { 0: 'otoño', 90: 'invierno', 180: 'primavera', 270: 'verano' } : { 0: 'primavera', 90: 'verano', 180: 'otoño', 270: 'invierno' };
+  $('#cSun').innerHTML = `<h4>SOL</h4>` + kv([['Primera luz', tm(s.civilDawn)], ['Amanecer', tm(s.rise)], ['Mediodía solar', s.noon ? `${tm(s.noon)} · ${Math.round(s.noonAlt)}°` : '—'], ['Atardecer', tm(s.set)], ['Última luz', tm(s.civilDusk)],
+    ['Duración del día', s.len == null ? '—' : fmtM(s.len / 60000)], ['Noche cerrada', `hasta ${tm(s.astroDawn)} · desde ${tm(s.astroDusk)}`]])
+    + `<p class="hint">El Sol está en ${z}.${ns ? ` Próximo ${ns.ang % 180 ? 'solsticio' : 'equinoccio'}: ${tmd(ns.t)}, empieza el ${SN[ns.ang]}.` : ''}</p>`;
+  /* Luna */
+  const mp = Cosmos.moonPhase(ref), mb = CD.bodies.luna, np = Cosmos.nextPhases(ref, 4);
+  $('#cMoon').innerHTML = `<h4>LUNA</h4><div class="moonrow"><canvas id="cMoonC" aria-label="Fase lunar"></canvas><div><b>${mp.name}</b><span class="mut">Iluminada ${Math.round(mp.k * 100)} % · ${mp.age.toFixed(1).replace('.', ',')} días</span><span class="mut">En la zona de ${Cosmos.zodiac(Cosmos.pos('luna', ref).lon2000)}</span></div></div>`
+    + `<p class="hint">${rsText(mb)}</p>` + kv(np.map(p => [p.name, tmd(p.t)]));
+  const mc = $('#cMoonC'), dpr = devicePixelRatio || 1; mc.width = mc.height = Math.round(76 * dpr);
+  const mx = mc.getContext('2d'); mx.setTransform(dpr, 0, 0, dpr, 0, 0); moonShape(mx, 38, 38, 32, mp);
+  /* Planetas */
+  $('#cPl').innerHTML = Cosmos.PLANETS.map(p => {
+    const b = CD.bodies[p.id], al = A[p.id], r = runs(n, i => al[i] > hz(p.id) && A.sol[i] < -6), at = i => t0 + i * CD.step;
+    const vis = r.length ? 'Visible ' + r.map(([a, c]) => `${tm(at(a))}–${tm(at(c))}`).join(' y ') : b.never ? 'No sale este día' : 'No se ve: sale y se pone con el cielo claro';
+    return `<div class="pl"><i style="background:${p.color};box-shadow:0 0 8px ${p.color}"></i><span><b>${p.name}</b> · en ${Cosmos.zodiac(Cosmos.pos(p.id, ref).lon2000)}<small>${vis}</small><small>${rsText(b)}</small></span></div>`;
+  }).join('');
+  /* Un día bajo el cielo: tu agenda y el cielo en la misma línea de tiempo */
+  const now = isT ? `<span class="tnow" style="left:${(Date.now() - t0) / (t1 - t0) * 100}%"></span>` : '';
+  const row = (label, inner) => `<div class="trow"><span>${label}</span><div class="tr">${inner}${now}</div></div>`;
+  const seg = (a, b, st, ti) => `<span style="left:${a / n * 100}%;width:${(b - a) / n * 100}%;${st}"${ti ? ` title="${esc(ti)}"` : ''}></span>`;
+  const agenda = dayBlocks(cdate).map(b => `<span style="left:${b.s / 14.4}%;width:${(b.e - b.s) / 14.4}%;background:${(act(b.a) || {}).color || '#888'}" title="${esc(hm(b.s) + '–' + hm(b.e) + ' ' + lab(b))}"></span>`).join('');
+  let sky = '', i = 0; const cls = A.sol.slice(0, n).map(skyCls);
+  while (i < n) { let j = i; while (j < n && cls[j] === cls[i]) j++; sky += seg(i, j, `background:${SKYC[cls[i]]}`); i = j; }
+  const body = (id, color) => { let h = ''; i = 0; const st = k => A[id][k] > hz(id) ? (A.sol[k] < -6 ? 2 : 1) : 0; while (i < n) { let j = i; while (j < n && st(j) === st(i)) j++; if (st(i)) h += seg(i, j, `background:${color};opacity:${st(i) === 2 ? 1 : .35}`); i = j; } return h; };
+  $('#cTl').innerHTML = row('Agenda', agenda) + row('Cielo', sky) + row('Luna', body('luna', '#e9e4cf')) + Cosmos.PLANETS.map(p => row(p.name, body(p.id, p.color))).join('')
+    + `<div class="trow"><span></span><div class="ax">${[0, 6, 12, 18, 24].map(h => `<i style="left:${h / 24 * 100}%">${pad(h)}</i>`).join('')}</div></div>`
+    + `<p class="hint">Cielo: azul = día, violeta = crepúsculo, oscuro = noche. En la Luna y los planetas, el color pleno indica que están sobre el horizonte con el cielo oscuro; el tenue, que es de día.</p>`;
+  $('#cT').value = Math.min(1435, curMapMin());
+  drawMap();
+}
+const curMapMin = () => cmin !== null ? cmin : cdate === ds(today()) ? nowMin() : 1320;
+const cm = $('#cmap');
+function drawMap() {
+  if (!window.Cosmos || !CD) return;
+  const w = cm.clientWidth; if (!w) return; const dpr = devicePixelRatio || 1;
+  if (cm.width !== Math.round(w * dpr)) { cm.width = Math.round(w * dpr); cm.height = cm.width; }
+  const c = cm.getContext('2d'), min = curMapMin(), follow = cmin === null && cdate === ds(today()), t = follow ? Date.now() : pdt(cdate).getTime() + min * 60000;
+  const sk = Cosmos.skyAt(t, geo.lat, geo.lon), x0 = w / 2, y0 = w / 2, Rr = w / 2 - 24, dayk = Math.max(0, Math.min(1, (sk.sun.alt + 12) / 14)), sv = 1 - dayk * .88;
+  const P = (alt, az, rad) => { const r = (90 - alt) / 90 * (rad || Rr), a = az * Math.PI / 180; return [x0 - r * Math.sin(a), y0 - r * Math.cos(a)]; };
+  $('#cTl2').textContent = hm(min); $('#cT').value = Math.min(1435, min);
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, w);
+  c.fillStyle = mix('#03050a', '#3a76ad', dayk); c.beginPath(); c.arc(x0, y0, Rr, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(39,245,201,.4)'; c.lineWidth = 1.5; c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.08)'; c.lineWidth = 1; [30, 60].forEach(a => { c.beginPath(); c.arc(x0, y0, (90 - a) / 90 * Rr, 0, 7); c.stroke(); });
+  c.fillStyle = '#8b9bb0'; c.font = '700 12px ' + MONO; c.textAlign = 'center'; c.textBaseline = 'middle';
+  [['N', 0], ['E', 90], ['S', 180], ['O', 270]].forEach(([l, az]) => { const [x, y] = P(0, az, Rr + 13); c.fillText(l, x, y); });
+  c.globalAlpha = sv; c.strokeStyle = 'rgba(39,245,201,.4)'; c.lineWidth = 1;
+  Object.values(Cosmos.LINES).forEach(ls => ls.forEach(([a, b]) => {
+    const A1 = sk.stars[Cosmos.SIDX[a]], B1 = sk.stars[Cosmos.SIDX[b]]; if (A1.alt <= 0 || B1.alt <= 0) return;
+    const [x1, y1] = P(A1.alt, A1.az), [x2, y2] = P(B1.alt, B1.az); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  }));
+  const groups = {};
+  sk.stars.forEach(st => {
+    if (st.alt <= 0) return; const [x, y] = P(st.alt, st.az);
+    c.fillStyle = st.mag < 1 ? '#fff6dc' : '#e6f1ff'; c.beginPath(); c.arc(x, y, Math.max(.9, 2.5 - .45 * st.mag), 0, 7); c.fill();
+    if (st.alt > 5) { const g = groups[st.con] || (groups[st.con] = { x: 0, y: 0, k: 0, m: 9 }); g.x += x; g.y += y; g.k++; g.m = Math.min(g.m, st.mag); }
+    if (st.mag < 1 && st.alt > 5 && sv > .3) { c.fillStyle = 'rgba(207,227,245,.9)'; c.font = '10px ' + MONO; c.textAlign = 'left'; c.fillText(st.name, x + 6, y - 5); }
+  });
+  c.fillStyle = 'rgba(39,245,201,.75)'; c.font = 'italic 10px ' + MONO; c.textAlign = 'center';
+  Object.entries(groups).forEach(([k, g]) => { if (g.m <= 2.3 && sv > .3) c.fillText(Cosmos.CON[k], g.x / g.k, g.y / g.k + 14); });
+  c.globalAlpha = 1; c.textAlign = 'left';
+  sk.planets.forEach(p => {
+    if (p.alt <= 0) return; const [x, y] = P(p.alt, p.az); c.globalAlpha = dayk > .6 ? .5 : 1;
+    c.shadowColor = p.color; c.shadowBlur = 10; c.fillStyle = p.color; c.beginPath(); c.arc(x, y, 3.6, 0, 7); c.fill(); c.shadowBlur = 0;
+    c.fillStyle = '#e6f1ff'; c.font = '11px ' + MONO; c.fillText(p.name, x + 7, y + 4);
+  });
+  c.globalAlpha = 1;
+  if (sk.moon.alt > 0) { const [x, y] = P(sk.moon.alt, sk.moon.az); c.shadowColor = '#f4efdc'; c.shadowBlur = 12; moonShape(c, x, y, 8, sk.moon.phase); c.shadowBlur = 0; c.fillStyle = '#e6f1ff'; c.font = '11px ' + MONO; c.fillText('Luna', x + 12, y + 4); }
+  if (sk.sun.alt > -1) { const [x, y] = P(Math.max(sk.sun.alt, 0), sk.sun.az); const g = c.createRadialGradient(x, y, 1, x, y, 20); g.addColorStop(0, '#fff7c2'); g.addColorStop(.35, '#ffd23f'); g.addColorStop(1, 'rgba(255,210,63,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); c.fillStyle = '#e6f1ff'; c.font = '11px ' + MONO; c.fillText('Sol', x + 14, y + 4); }
+  const a = sk.sun.alt, up = (sk.moon.alt > 0 ? ['la Luna'] : []).concat(sk.planets.filter(p => p.alt > 0).map(p => p.name));
+  $('#cInfo').textContent = `${hm(min)} · ${a > 0 ? 'de día' : a > -6 ? 'crepúsculo civil' : a > -12 ? 'crepúsculo náutico' : a > -18 ? 'crepúsculo astronómico' : 'noche cerrada'}. Sobre el horizonte: ${up.length ? up.join(', ') : 'ni la Luna ni los planetas'}.`;
+}
+if (window.ResizeObserver) new ResizeObserver(drawMap).observe(cm);
+const cgo = k => { cdate = k; cmin = null; renderCos(); };
+$('#cPrev').onclick = () => cgo(ds(addD(pdt(cdate), -1)));
+$('#cNext').onclick = () => cgo(ds(addD(pdt(cdate), 1)));
+$('#cHoy').onclick = () => cgo(ds(today()));
+$('#cNow').onclick = () => cgo(ds(today()));
+$('#cT').oninput = e => { cmin = +e.target.value; drawMap(); };
+const dL = $('#dL');
+$('#cLoc').onclick = () => { $('#lLa').value = geo.lat; $('#lLo').value = geo.lon; $('#lN').value = geo.def ? '' : geo.name; const h = $('#lH'); h.classList.remove('err'); h.textContent = 'Latitud negativa = sur, longitud negativa = oeste.'; dL.showModal(); };
+$('#lX').onclick = () => dL.close();
+$('#lGps').onclick = () => {
+  const h = $('#lH'); h.classList.remove('err');
+  if (!navigator.geolocation) { h.textContent = 'Este dispositivo no ofrece geolocalización: cargá las coordenadas a mano.'; return; }
+  h.textContent = 'Buscando tu ubicación…';
+  navigator.geolocation.getCurrentPosition(p => { $('#lLa').value = p.coords.latitude.toFixed(4); $('#lLo').value = p.coords.longitude.toFixed(4); $('#lN').value = ''; h.textContent = 'Listo: tocá Guardar.'; },
+    () => { h.classList.add('err'); h.textContent = 'No se pudo obtener la ubicación (permiso denegado o sin señal). Cargala a mano.'; }, { timeout: 10000, maximumAge: 600000 });
+};
+$('#fL').onsubmit = e => {
+  e.preventDefault(); const la = parseFloat($('#lLa').value), lo = parseFloat($('#lLo').value), h = $('#lH');
+  if (!(Math.abs(la) <= 90 && Math.abs(lo) <= 180)) { h.classList.add('err'); h.textContent = 'La latitud va de −90 a 90 y la longitud de −180 a 180.'; return; }
+  geo = { lat: la, lon: lo, name: $('#lN').value.trim().slice(0, 40) };
+  try { localStorage.setItem(GEOK, JSON.stringify(geo)); } catch (x) {}
+  dL.close(); renderCos();
+};
+
 /* ---------- Arranque ---------- */
-function renderAll() { recalc(); renderHead(); renderPer(); renderLegend(); renderActs(); renderBal(); renderBit(); renderTpl(); lastNow = ''; renderNow(); }
+function renderAll() { recalc(); renderHead(); renderPer(); renderLegend(); renderActs(); renderBal(); renderBit(); renderTpl(); lastNow = ''; renderNow(); if ($('#v-cos').classList.contains('on')) renderCos(); }
 function tick() {
   const k = ds(today()), busy = document.querySelector('dialog[open]');
   if (k !== lastDay && !busy) { lastDay = k; freeze(); renderAll(); return; }
   renderNow(); const m = nowMin();
   if (m !== lastMin && !busy) { lastMin = m; renderBit(); }
+  if (m !== lastCos && !busy && $('#v-cos').classList.contains('on')) { lastCos = m; if (cmin === null && cdate === k) renderCos(); }
 }
 freeze(); save(); renderAll(); resize(); setInterval(tick, 1000); requestAnimationFrame(draw);
 })();

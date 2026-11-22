@@ -47,9 +47,28 @@ Existe un planeta de **Sueño nocturno** con una línea de resumen por día ("No
 | **Bitácora** | Agenda por fecha, navegación semanal, selector de fecha y botón **Hoy**. |
 | **Semana** | Edición de la semana regular, día por día. |
 | **Planetas** | Alta, edición y baja de planetas. |
-| **Balance** | Barras de reparto por planeta, gráfico apilado por día o mes y respaldo de datos. |
+| **Balance** | Barras de reparto por planeta, gráfico apilado por día o mes, respaldo de datos y cronograma en PDF. |
+| **Cosmos** | El cielo real sobre tu ubicación: Sol, Luna, planetas, estaciones y un mapa de estrellas. |
 
 Cielo y Balance se pueden ver por **Semana, Mes o Año**, con navegación entre períodos.
+
+## Cronograma semanal en PDF
+
+En **Balance**, el botón **Cronograma PDF** descarga la semana que estás viendo en *Bitácora* como una hoja A4 apaisada: una grilla de lunes a domingo con las 24 horas, bloques de colores con su título y horario, el día de hoy resaltado y, al pie, las horas de la semana por planeta. Los días anteriores al inicio de la bitácora muestran la semana regular. El archivo se genera en el dispositivo (`orbita-cronograma-AAAA-MM-DD.pdf`), sin servidor ni librerías.
+
+## Cosmos: el cielo mientras vivís tu semana
+
+Una pestaña aparte, pensada para no invadir la agenda. Todo se calcula en el dispositivo, sin conexión, para la fecha y el lugar elegidos:
+
+- **Sol:** primera luz, amanecer, mediodía solar (con su altura), atardecer, última luz, duración del día y noche cerrada. Indica en qué constelación está el Sol y cuándo es el próximo equinoccio o solsticio, con el nombre de la estación según tu hemisferio.
+- **Luna:** fase, porcentaje de iluminación, edad, salida y puesta, y las próximas cuatro fases. El dibujo respeta tu hemisferio (en el sur se ve "invertida").
+- **Planetas:** Mercurio, Venus, Marte, Júpiter y Saturno, con su constelación, salida y puesta, y los horarios en que se ven de noche.
+- **Un día bajo el cielo:** una línea de tiempo que pone tu agenda, la luz del cielo (día, crepúsculos, noche), la Luna y los planetas en las mismas 24 horas.
+- **Mapa del cielo:** vista hacia arriba con unas 60 estrellas brillantes, figuras como Orión, la Cruz del Sur y el Triángulo de verano, y un deslizador para recorrer el día. El Este queda a la izquierda, como al mirar el cielo.
+
+La ubicación se configura con el botón **Ubicación** (geolocalización del dispositivo o latitud y longitud a mano) y se guarda aparte de la agenda, bajo la clave `orbita.geo`. Si no la configurás, usa Córdoba, Argentina. Los horarios se muestran en la hora del dispositivo.
+
+**Precisión:** usa elementos orbitales de baja resolución. En pruebas contra valores conocidos de 2026, equinoccios y solsticios coinciden en minutos, y las fases lunares en unos 10 minutos. Las constelaciones se asignan por la longitud eclíptica, así que son aproximadas cerca de los límites.
 
 ## Funcionalidades
 
@@ -59,11 +78,12 @@ Cielo y Balance se pueden ver por **Semana, Mes o Año**, con navegación entre 
 - Balance con porcentaje de tiempo por planeta, incluyendo "Sin asignar".
 - **Exportar / importar** respaldo en JSON (`orbita-AAAA-MM-DD.json`). La importación valida y limpia el archivo, y rechaza los que no son de Órbita.
 - Migración automática desde versiones anteriores de los datos (`orbita.v4`).
+- Cronograma semanal en **PDF** y pestaña **Cosmos** con el cielo de tu ubicación.
 - Interfaz oscura, mobile-first, con barra de pestañas inferior en móvil y superior en escritorio. Soporta pantallas con notch.
 
 ## Datos y privacidad
 
-Todo se guarda en `localStorage` bajo la clave `orbita.v5`. No hay backend, cuentas ni seguimiento.
+Todo se guarda en `localStorage`: la agenda bajo la clave `orbita.v5` y la ubicación del cielo bajo `orbita.geo` (esta no entra en el respaldo JSON). No hay backend, cuentas ni seguimiento, y la ubicación nunca sale del dispositivo.
 
 > ⚠️ Al ser `localStorage`, borrar los datos del navegador borra tu agenda. Usá **Exportar datos** (pestaña *Balance*) para hacer respaldos, sobre todo antes de cambiar de dispositivo.
 
@@ -72,7 +92,8 @@ Al abrir la app por primera vez se carga una **semana de ejemplo** con planetas 
 ## Stack
 
 - HTML, CSS y JavaScript **vanilla** (sin frameworks ni build)
-- `canvas` 2D para el sistema solar
+- `canvas` 2D para el sistema solar, el mapa del cielo y la Luna
+- Generador de PDF propio (`js/pdf.js`) y motor astronómico propio (`js/cosmos.js`), sin dependencias
 - `<dialog>` nativo para los editores
 - Hosting estático en GitHub Pages; apto para empaquetar como APK Android vía WebView
 
@@ -84,7 +105,9 @@ agendasolar/
 ├── css/
 │   └── style.css
 ├── js/
-│   └── app.js
+│   ├── app.js        # la app
+│   ├── cosmos.js     # astronomía: Sol, Luna, planetas, estrellas
+│   └── pdf.js        # generador del cronograma en PDF
 └── README.md
 ```
 

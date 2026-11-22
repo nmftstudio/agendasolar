@@ -18,6 +18,7 @@
   <button data-v="sem">Semana</button>
   <button data-v="act">Planetas</button>
   <button data-v="bal">Balance</button>
+  <button data-v="cos">Cosmos</button>
 </nav>
 <main>
   <section id="v-cielo" class="view on">
@@ -52,7 +53,23 @@
     <div class="per"></div>
     <div id="stack" class="stack"></div>
     <div id="review"></div>
-    <div class="data"><button id="exp">Exportar datos</button><label class="btn">Importar datos<input type="file" id="imp" accept=".json" hidden></label></div>
+    <div class="data"><button id="exp">Exportar datos</button><label class="btn">Importar datos<input type="file" id="imp" accept=".json" hidden></label><button id="expPdf">Cronograma PDF</button></div>
+    <p class="hint" id="pdfHint"></p>
+  </section>
+  <section id="v-cos" class="view">
+    <div class="rowhead"><h2>Cosmos</h2><button id="cLoc">Ubicación</button></div>
+    <p class="hint" id="cPlace"></p>
+    <div class="weeknav cnav"><button id="cPrev" aria-label="Día anterior">‹</button><span id="cLbl"></span><button id="cNext" aria-label="Día siguiente">›</button><button id="cHoy">Hoy</button></div>
+    <div class="cards"><article id="cSun" class="card"></article><article id="cMoon" class="card"></article></div>
+    <h3 class="sec">Planetas</h3>
+    <div id="cPl" class="plist"></div>
+    <h3 class="sec">Un día bajo el cielo</h3>
+    <div id="cTl" class="tl"></div>
+    <h3 class="sec">Mapa del cielo</h3>
+    <div class="sky skym"><canvas id="cmap" aria-label="Mapa del cielo sobre tu ubicación"></canvas></div>
+    <div class="skyctl"><input type="range" id="cT" min="0" max="1435" step="5" aria-label="Hora del día"><span id="cTl2"></span><button id="cNow">Ahora</button></div>
+    <p class="hint" id="cInfo"></p>
+    <p class="hint">Mirando hacia arriba: el Este queda a la izquierda. Posiciones calculadas en el dispositivo, sin conexión (precisión de baja resolución: minutos para el Sol, algo más para la Luna). Horarios en la hora de tu dispositivo.</p>
   </section>
 </main>
 <dialog id="dB"><form id="fB">
@@ -75,6 +92,16 @@
   <label class="chk"><input type="checkbox" id="aK"> Va en el centro (el sol)</label>
   <menu><button type="button" class="danger" id="aDel">Eliminar</button><button type="button" id="aX">Cancelar</button><button class="go">Guardar</button></menu>
 </form></dialog>
+<dialog id="dL"><form id="fL">
+  <h3>Ubicación del cielo</h3>
+  <label>Nombre (opcional)<input id="lN" maxlength="40" placeholder="Ej. Villa General Belgrano"></label>
+  <div class="two"><label>Latitud<input type="number" id="lLa" step="any" min="-90" max="90" required></label><label>Longitud<input type="number" id="lLo" step="any" min="-180" max="180" required></label></div>
+  <button type="button" id="lGps">Usar mi ubicación</button>
+  <p class="hint" id="lH"></p>
+  <menu><button type="button" id="lX">Cancelar</button><button class="go">Guardar</button></menu>
+</form></dialog>
+<script src="js/cosmos.js"></script>
+<script src="js/pdf.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
