@@ -1,4 +1,4 @@
-# ÓRBITA · Sistema Solar del Tiempo
+# ORBYTAN Agenda Solar · Sistema Solar del Tiempo
 
 > Tu semana como sistema solar.
 
