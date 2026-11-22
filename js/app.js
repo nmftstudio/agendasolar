@@ -1,18 +1,40 @@
 (() => {
-const SLOTS = 36, START = 6, DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const KEY = 'sistemaSolarTiempo.v1';
+const SLOTS = 48, START = 0, DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const KEY = 'orbita.v3';
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pad = n => String(n).padStart(2, '0');
 
+/* Datos iniciales: sistema de prioridades (Familia al centro) y Semana A */
+const ACTS = [
+  ['fam', 'Familia', '#ffd23f', 1], ['bud', 'Práctica budista', '#8b7bff'], ['trab', 'Trabajo e ingresos', '#5aa9ff'],
+  ['prog', 'Programación (NMFT)', '#27f5c9'], ['foto', 'Fotografía', '#ff3d81'], ['plom', 'Plomero y gasista', '#ff9f43'],
+  ['hogar', 'Labores del hogar', '#c9a27e'], ['bib', 'Biblioteca Semilla del Sur', '#b6f04a'],
+  ['radio', 'Radio "Kantos Rodados"', '#ff7a59'], ['desc', 'Descanso y sueño', '#8795a8']
+];
+// Semana A, lunes a domingo. Formato "horaInicio-horaFin:actividad" (horas decimales, 20.5 = 20:30)
+const SEMANA_A = [
+  '7-8:bud 8-13:trab 13-14:fam 14-16:prog 16-17:hogar 17-18:desc 18-19:fam 19-20.5:foto 20.5-22.5:fam 22.5-23:desc',
+  '7-8:bud 8-13:trab 13-14:fam 14-16:prog 16-17:desc 17-19:fam 19-20.5:radio 20.5-22.5:fam 22.5-23:desc',
+  '7-8:bud 8-13:trab 13-14:fam 14-16:prog 16-17.5:foto 17.5-18.5:hogar 18.5-20.5:bib 20.5-22.5:fam 22.5-23:desc',
+  '7-8:bud 8-13:trab 13-14:fam 14-16:prog 16-18:fam 18-19:hogar 19-22.5:fam 22.5-23:desc',
+  '8.5-9:fam 9-10:bud 10-15:trab 15-16:fam 16-18:desc 18-20.5:fam 20.5-21:desc 21-24:trab',
+  '0-8:trab 8-15:desc 15-16:fam 16-17:bud 17-18:hogar 18-20.5:fam 20.5-21:desc 21-24:trab',
+  '0-8:trab 8-15:desc 15-16:fam 16-17:bud 17-19:foto 19-19.5:desc 19.5-22.5:fam 22.5-23:desc'
+];
+function seed() {
+  const grid = {};
+  SEMANA_A.forEach((day, d) => day.split(' ').forEach(b => {
+    const [r, id] = b.split(':'), [i, f] = r.split('-').map(Number);
+    for (let k = i * 2; k < f * 2; k++) grid[d + '-' + k] = id;
+  }));
+  return { activities: ACTS.map(([id, name, color, c]) => ({ id, name, color, center: !!c })), grid, log: {}, timer: null };
+}
 function load() {
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.activities) return s; } catch (e) {}
-  return { activities: [
-    { id: 'a1', name: 'Trabajo', color: '#ffd23f' }, { id: 'a2', name: 'Estudio', color: '#27f5c9' },
-    { id: 'a3', name: 'Ejercicio', color: '#ff3d81' }, { id: 'a4', name: 'Descanso', color: '#8b7bff' }
-  ], grid: {}, log: {}, timer: null };
+  return seed();
 }
-let S = load(), mode = 'plan', offset = 0, sel = 'a1';
+let S = load(), mode = 'plan', offset = 0, sel = (S.activities[1] || S.activities[0] || {}).id || null;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 function monday(off) {
@@ -157,21 +179,22 @@ function draw(t) {
       }
     }
   }
-  const acts = S.activities, n = acts.length, x0 = W / 2, y0 = H / 2;
-  const avail = Math.min(W, H) / 2 - 12, sunR = Math.max(24, avail * .15);
+  const core = S.activities.find(a => a.center), acts = S.activities.filter(a => !a.center), n = acts.length, x0 = W / 2, y0 = H / 2;
+  const ax = W / 2 - 12, ay = H / 2 - 12, avail = Math.min(ax, ay), k = Math.min(1.7, Math.max(1, ax / ay)), sunR = Math.max(28, avail * .13);
   const maxH = Math.max(1, ...acts.map(a => Math.max(planned(a.id), realMin(a.id, offset) / 60)));
-  const spacing = (avail - sunR - 8) / Math.max(n, 1), cap = Math.min(spacing * .46, 38);
+  const spacing = (avail - sunR - 8) / Math.max(n, 1), cap = Math.min(spacing * .75, 40);
   const pr = h => h <= 0 ? 0 : Math.max(5, cap * Math.sqrt(h / maxH));
   const total = acts.reduce((s, a) => s + val(a), 0);
   const g = cx.createRadialGradient(x0, y0, 2, x0, y0, sunR * 2.2);
   g.addColorStop(0, '#fff7c2'); g.addColorStop(.4, '#ffd23f'); g.addColorStop(.5, 'rgba(255,210,63,.22)'); g.addColorStop(1, 'rgba(255,210,63,0)');
   cx.fillStyle = g; cx.beginPath(); cx.arc(x0, y0, sunR * 2.2, 0, 7); cx.fill();
-  cx.fillStyle = '#1a1300'; cx.font = '700 13px ' + MONO; cx.fillText(fmt(total), x0, y0 + 4);
+  cx.fillStyle = '#1a1300'; cx.font = '700 12px ' + MONO;
+  if (core) { cx.fillText(core.name, x0, y0 - 2); cx.fillText(fmt(val(core)), x0, y0 + 12); } else cx.fillText(fmt(total), x0, y0 + 4);
   acts.forEach((a, i) => {
     const o = sunR + spacing * (i + .5), v = val(a), r = pr(v);
     const ang = i * 2.1 + (still ? 0 : t / 1000 * .35 / Math.pow(i + 1, .7)), ux = Math.cos(ang), uy = Math.sin(ang);
-    const x = x0 + ux * o, y = y0 + uy * o;
-    cx.strokeStyle = 'rgba(39,245,201,.14)'; cx.lineWidth = 1; cx.beginPath(); cx.arc(x0, y0, o, 0, 7); cx.stroke();
+    const x = x0 + ux * o * k, y = y0 + uy * o;
+    cx.strokeStyle = 'rgba(39,245,201,.14)'; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(x0, y0, o * k, o, 0, 0, 7); cx.stroke();
     if (mode === 'real' && planned(a.id) > 0) {
       cx.setLineDash([3, 3]); cx.strokeStyle = a.color; cx.globalAlpha = .6;
       cx.beginPath(); cx.arc(x, y, pr(planned(a.id)) + 3, 0, 7); cx.stroke(); cx.setLineDash([]); cx.globalAlpha = 1;
@@ -185,7 +208,7 @@ function draw(t) {
     cx.fillText(`${a.name} · ${fmt(v)}`, x, y + rr + 14);
   });
   if (n) {
-    const sa = still ? 1 : t / 2600, sx = x0 + Math.cos(sa) * avail, sy = y0 + Math.sin(sa) * avail;
+    const sa = still ? 1 : t / 2600, sx = x0 + Math.cos(sa) * avail * k, sy = y0 + Math.sin(sa) * avail;
     cx.fillStyle = '#e6f1ff'; cx.fillRect(sx - 2, sy - 2, 4, 4); cx.fillRect(sx - 6, sy - 1, 3, 2); cx.fillRect(sx + 3, sy - 1, 3, 2);
   } else { cx.fillStyle = '#7d8da1'; cx.font = '14px ' + MONO; cx.fillText('Agregá una actividad para lanzar el primer planeta', x0, y0 + sunR * 2.4); }
   requestAnimationFrame(draw);
@@ -208,7 +231,7 @@ $('#imp').onchange = e => {
   rd.onload = () => {
     try {
       const d = JSON.parse(rd.result); if (!Array.isArray(d.activities)) throw 0;
-      S = { activities: d.activities.map(a => ({ id: String(a.id).replace(/[^\w-]/g, ''), name: String(a.name).slice(0, 24), color: /^#[0-9a-f]{6}$/i.test(a.color) ? a.color : '#888888' })), grid: d.grid || {}, log: d.log || {}, timer: null };
+      S = { activities: d.activities.map(a => ({ id: String(a.id).replace(/[^\w-]/g, ''), name: String(a.name).slice(0, 40), center: !!a.center, color: /^#[0-9a-f]{6}$/i.test(a.color) ? a.color : '#888888' })), grid: d.grid || {}, log: d.log || {}, timer: null };
       if (!S.activities.some(a => a.id === sel)) sel = null;
       save(); paintAll(); renderActs();
     } catch (x) { alert('El archivo no es un respaldo válido de Órbita.'); }
@@ -216,5 +239,5 @@ $('#imp').onchange = e => {
   rd.readAsText(f); e.target.value = '';
 };
 
-buildGrid(); renderActs(); setInterval(tick, 1000); requestAnimationFrame(draw);
+buildGrid(); $('.gridwrap').scrollTop = 12 * 16; renderActs(); setInterval(tick, 1000); requestAnimationFrame(draw);
 })();

@@ -13,10 +13,10 @@ h2 i,.hud i{font-style:normal;color:var(--b);margin-right:8px}
 #score b{display:block;font-size:26px;color:var(--a);text-shadow:0 0 14px rgba(39,245,201,.5)}
 #score span{color:var(--mut);font-size:11px}
 main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding-bottom:30px}
-.sky{position:relative;border:2px solid var(--a);border-radius:10px;overflow:hidden;background:#03050a;box-shadow:0 0 28px rgba(39,245,201,.18),inset 0 0 40px rgba(39,245,201,.06);min-height:440px;display:flex;flex-direction:column}
+.sky{position:relative;border:2px solid var(--a);border-radius:10px;overflow:hidden;background:#03050a;box-shadow:0 0 28px rgba(39,245,201,.18),inset 0 0 40px rgba(39,245,201,.06);min-height:580px;display:flex;flex-direction:column}
 .sky::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
 .hud{display:flex;justify-content:space-between;padding:8px 14px;font-size:13px;border-bottom:1px solid var(--line);color:var(--mut)}
-#sky{display:block;width:100%;flex:1;min-height:400px}
+#sky{display:block;width:100%;flex:1;min-height:540px}
 .card{background:var(--pn);border:1px solid var(--line);border-radius:10px;padding:16px}
 .wide{grid-column:1/-1}
 .hint{color:var(--mut);margin:4px 0 12px;font-size:13px}
@@ -62,5 +62,5 @@ button:focus-visible,input:focus-visible,.btn:focus-within{outline:2px solid var
 .rev small{color:var(--mut);text-align:right;font-size:12px}
 .ok{color:var(--a)}.low{color:var(--b)}
 footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:6px;padding-bottom:28px;color:var(--mut);font-size:13px}
-@media(max-width:820px){main{grid-template-columns:1fr}.rev{grid-template-columns:100px 1fr}.rev small{grid-column:1/-1;text-align:left}}
+@media(max-width:820px){main{grid-template-columns:1fr}.sky{min-height:480px}#sky{min-height:440px}.rev{grid-template-columns:100px 1fr}.rev small{grid-column:1/-1;text-align:left}}
 @media(prefers-reduced-motion:reduce){.act .run{animation:none}}
