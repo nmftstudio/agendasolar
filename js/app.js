@@ -41,17 +41,17 @@ const ACTS = [
   ['fam', 'Familia', '#ffd23f', 1], ['bud', 'Práctica budista', '#8b7bff'], ['trab', 'Trabajo e ingresos', '#5aa9ff'],
   ['prog', 'Programación (NMFT)', '#27f5c9'], ['foto', 'Fotografía', '#ff3d81'], ['plom', 'Plomero y gasista', '#ff9f43'],
   ['hogar', 'Labores del hogar', '#c9a27e'], ['bib', 'Biblioteca Semilla del Sur', '#b6f04a'],
-  ['radio', 'Radio "Kantos Rodados"', '#ff7a59'], ['desc', 'Descanso y sueño', '#8795a8']
+  ['radio', 'Radio "Kantos Rodados"', '#ff7a59'], ['desc', 'Descanso y sueño', '#8795a8'], ['sueno', 'Sueño nocturno', '#cfd8ff']
 ];
 // Lunes a domingo. "inicio-fin:actividad:título" (horas decimales: 20.5 = 20:30). Sin título = nombre de la actividad.
 const SEMANA_A = [
-  '7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17:hogar;17-18:desc:Descanso libre;18-19:fam:Familia;19-20.5:foto;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir',
-  '7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17:desc:Descanso libre;17-19:fam:Familia;19-20.5:radio:Radio con Marianela;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir',
-  '7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17.5:foto;17.5-18.5:hogar;18.5-20.5:bib;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir',
-  '7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-18:fam:Cuidar a Sol;18-19:hogar;19-21:fam:Familia;21-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir',
-  '8.5-9:fam:Desayuno;9-10:bud;10-15:trab:Uber;15-16:fam:Almuerzo y familia;16-18:desc:Siesta;18-19.5:fam:Familia;19.5-20.5:fam:Cena y familia;20.5-21:desc:Salida al hotel;21-24:trab:Hotel (noche)',
+  '0-7:sueno;7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17:hogar;17-18:desc:Descanso libre;18-19:fam:Familia;19-20.5:foto;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir;23-24:sueno',
+  '0-7:sueno;7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17:desc:Descanso libre;17-19:fam:Familia;19-20.5:radio:Radio con Marianela;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir;23-24:sueno',
+  '0-7:sueno;7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-17.5:foto;17.5-18.5:hogar;18.5-20.5:bib;20.5-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir;23-24:sueno',
+  '0-7:sueno;7-8:bud;8-13:trab:Uber;13-14:fam:Almuerzo y familia;14-16:prog;16-18:fam:Cuidar a Sol;18-19:hogar;19-21:fam:Familia;21-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir;23-24:sueno',
+  '0-8.5:sueno;8.5-9:fam:Desayuno;9-10:bud;10-15:trab:Uber;15-16:fam:Almuerzo y familia;16-18:desc:Siesta;18-19.5:fam:Familia;19.5-20.5:fam:Cena y familia;20.5-21:desc:Salida al hotel;21-24:trab:Hotel (noche)',
   '0-8:trab:Hotel (turno del viernes);8-9:desc:Regreso y desayuno;9-15:desc:Dormir;15-16:fam:Almuerzo y familia;16-17:bud;17-18:hogar;18-19.5:fam:Familia;19.5-20.5:fam:Cena y familia;20.5-21:desc:Salida al hotel;21-24:trab:Hotel (noche)',
-  '0-8:trab:Hotel (turno del sábado);8-9:desc:Regreso y desayuno;9-15:desc:Dormir;15-16:fam:Almuerzo y familia;16-17:bud;17-19:foto:Fotografía en familia;19-19.5:desc:Revisión de la semana;19.5-21:fam:Familia;21-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir'
+  '0-8:trab:Hotel (turno del sábado);8-9:desc:Regreso y desayuno;9-15:desc:Dormir;15-16:fam:Almuerzo y familia;16-17:bud;17-19:foto:Fotografía en familia;19-19.5:desc:Revisión de la semana;19.5-21:fam:Familia;21-22.5:fam:Cena y familia;22.5-23:desc:Descanso y a dormir;23-24:sueno'
 ];
 const yesterday = () => ds(addD(today(), -1));
 function seed() {
@@ -60,7 +60,7 @@ function seed() {
     const [r, a, t] = x.split(':'), [s, e] = r.split('-').map(v => Math.round(v * 60));
     tpl.push({ id: 'b' + tpl.length, d, s, e, a, t: t || '' });
   }));
-  return { activities: ACTS.map(([id, name, color, c]) => ({ id, name, color, center: !!c })), tpl, days: {}, rec: [], frozen: yesterday() };
+  return { activities: ACTS.map(([id, name, color, c]) => ({ id, name, color, center: !!c })), tpl, days: {}, rec: [], frozen: yesterday(), fix: {}, start: ds(today()), v: 6 };
 }
 /* Modelo: tpl = semana regular; days[fecha] = día personalizado o ya registrado; rec = eventos que se repiten (cada mes / cada año) */
 function clean(d) {
@@ -71,10 +71,21 @@ function clean(d) {
   const days = {};
   Object.entries(d.days || {}).forEach(([k, l]) => { if (DRE.test(k) && Array.isArray(l)) days[k] = l.filter(ok).map((b, i) => ({ id: 'k' + i, s: b.s | 0, e: b.e | 0, a: b.a, t: tt(b) })); });
   const rec = (d.rec || []).filter(r => ok(r) && (r.k === 'y' || r.k === 'm')).map((r, i) => ({ id: 'r' + i, k: r.k, m: r.m | 0, dd: r.dd | 0, s: r.s | 0, e: r.e | 0, a: r.a, t: tt(r) }));
-  return { activities, tpl, days, rec, frozen: DRE.test(d.frozen) ? d.frozen : yesterday() };
+  const frozen = DRE.test(d.frozen) ? d.frozen : yesterday(), fix = {}, past = Object.keys(days).filter(k => k <= ds(today())).sort();
+  Object.keys(d.fix || {}).forEach(k => { if (DRE.test(k)) fix[k] = 1; });
+  return { activities, tpl, days, rec, frozen, fix, v: (d.v | 0) || 5, start: DRE.test(d.start) ? d.start : (past[0] || ds(addD(pdt(frozen), 1))) };
+}
+function migrate(s) { // v5 -> v6: suma el planeta de sueño y sus noches en la semana regular (solo si el horario está libre)
+  if (s.v >= 6) return s;
+  if (!s.activities.some(a => a.id === 'sueno')) {
+    s.activities.push({ id: 'sueno', name: 'Sueño nocturno', color: '#cfd8ff', center: false });
+    [[0, 0, 420], [0, 1380, 1440], [1, 0, 420], [1, 1380, 1440], [2, 0, 420], [2, 1380, 1440], [3, 0, 420], [3, 1380, 1440], [4, 0, 510], [6, 1380, 1440]]
+      .forEach(([d, a, b]) => { if (!s.tpl.some(x => x.d === d && x.s < b && a < x.e)) s.tpl.push({ id: uid(), d, s: a, e: b, a: 'sueno', t: '' }); });
+  }
+  s.v = 6; return s;
 }
 function load() {
-  for (const k of [KEY, 'orbita.v4']) { try { const s = JSON.parse(localStorage.getItem(k)); if (s && s.activities && (s.tpl || s.blocks)) return clean(s); } catch (e) {} }
+  for (const k of [KEY, 'orbita.v4']) { try { const s = JSON.parse(localStorage.getItem(k)); if (s && s.activities && (s.tpl || s.blocks)) return migrate(clean(s)); } catch (e) {} }
   return seed();
 }
 let S = load(), per = 'w', pref = today(), sel = ds(today()), wd = dow(today()), ctx = null, editA = null, selDays = new Set(), ST = { mins: {}, days: 1, buckets: [] }, lastDay = ds(today()), lastMin = -1, lastNow = '';
@@ -103,8 +114,10 @@ function proj(k) { // lo proyectado: semana regular + eventos que se repiten
   S.rec.forEach(r => { if (recHit(r, d)) l = place(l, { ...clone(r), src: 'r' }); });
   return l;
 }
-const dayBlocks = k => S.days[k] ? S.days[k].map(b => ({ ...b, src: 'd' })).sort((a, b) => a.s - b.s) : proj(k);
-function custom(k) { if (!S.days[k]) S.days[k] = proj(k).map(clone); return S.days[k]; }
+const dayBlocks = k => S.days[k] ? S.days[k].map(b => ({ ...b, src: 'd' })).sort((a, b) => a.s - b.s) : k < S.start ? [] : proj(k);
+function custom(k) { if (!S.days[k]) S.days[k] = k < S.start ? [] : proj(k).map(clone); return S.days[k]; }
+const markFix = k => { if (k < ds(today())) S.fix[k] = 1; };
+const fd = k => k.split('-').reverse().join('/');
 function freeze() { // la bitácora registra cada día que pasa tal como estaba planificado
   const y = yesterday(); if (S.frozen >= y) return;
   let d = addD(pdt(S.frozen), 1);
@@ -112,13 +125,14 @@ function freeze() { // la bitácora registra cada día que pasa tal como estaba 
   S.frozen = y; save();
 }
 function recalc() {
-  const [a, b] = range(per, pref), mins = {}, bk = []; let n = 0;
-  for (let d = a; d <= b; d = addD(d, 1), n++) {
-    const i = per === 'y' ? d.getMonth() : n;
+  const [a, b] = range(per, pref), mins = {}, bk = []; let idx = 0, dn = 0;
+  for (let d = a; d <= b; d = addD(d, 1), idx++) {
+    const k = ds(d), i = per === 'y' ? d.getMonth() : idx;
     const bb = bk[i] || (bk[i] = { m: {}, label: per === 'y' ? MES[i] : per === 'w' ? 'LMXJVSD'[i] : (i === 0 || (i + 1) % 5 === 0 ? String(i + 1) : ''), title: per === 'y' ? MESL[i] : `${D3[dow(d)]} ${d.getDate()}` });
-    dayBlocks(ds(d)).forEach(x => { const m = x.e - x.s; mins[x.a] = (mins[x.a] || 0) + m; bb.m[x.a] = (bb.m[x.a] || 0) + m; });
+    if (k < S.start && !S.days[k]) continue; // antes de empezar a usar la bitácora no hay registro
+    dn++; dayBlocks(k).forEach(x => { const m = x.e - x.s; mins[x.a] = (mins[x.a] || 0) + m; bb.m[x.a] = (bb.m[x.a] || 0) + m; });
   }
-  ST = { mins, days: n, buckets: bk };
+  ST = { mins, days: dn, buckets: bk };
 }
 
 /* ---------- Pestañas y periodo ---------- */
@@ -131,7 +145,9 @@ $('.tabs').onclick = e => { if (e.target.dataset.v) show(e.target.dataset.v); };
 function renderPer() {
   const h = `<div class="seg">${[['w', 'Semana'], ['m', 'Mes'], ['y', 'Año']].map(([k, n]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${n}</button>`).join('')}</div>
     <div class="weeknav"><button data-n="-1" aria-label="Anterior">‹</button><span>${perLabel(per, pref)}</span><button data-n="1" aria-label="Siguiente">›</button><button data-n="0">Hoy</button></div>`;
-  $$('.per').forEach(p => { p.innerHTML = h; });
+  const [a, b] = range(per, pref), st = pdt(S.start);
+  const nt = b < st ? `<p class="hint">Sin registros: la bitácora empezó el ${fd(S.start)}.</p>` : a < st ? `<p class="hint">Se cuenta desde el ${fd(S.start)}, cuando empezó la bitácora.</p>` : '';
+  $$('.per').forEach(p => { p.innerHTML = h + nt; });
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('.per button'); if (!b) return;
@@ -154,14 +170,23 @@ function listHTML(bl, pl, nl, isToday) {
 }
 const usedOf = bl => bl.reduce((t, b) => t + b.e - b.s, 0);
 const firstGap = bl => { let cur = 0; for (const b of bl) { if (b.s - cur >= 30) return [cur, Math.min(b.s, cur + 60)]; cur = Math.max(cur, b.e); } return 1440 - cur >= 30 ? [cur, Math.min(1440, cur + 60)] : null; };
+function nightLine(k) {
+  if (!act('sueno')) return null;
+  const pre = dayBlocks(ds(addD(pdt(k), -1))).filter(b => b.a === 'sueno' && b.e === 1440), cur = dayBlocks(k).filter(b => b.a === 'sueno' && b.s === 0);
+  const mins = pre.concat(cur).reduce((t, b) => t + b.e - b.s, 0), from = pre.length ? pre[0].s : 1380, to = cur.length ? cur[cur.length - 1].e : 420;
+  return { mins, from, to, text: mins ? `Noche anterior: ${pre.length ? hm(from) : '00:00'} → ${cur.length ? hm(to) : '00:00'} · ${fmtM(mins)}` : 'Noche anterior: sin sueño registrado' };
+}
 function renderBit() {
   const sd = pdt(sel), mon = monday(sd), t = ds(today()), cust = !!S.days[sel], past = sel < t;
   $('#bLbl').textContent = perLabel('w', mon); $('#bGo').value = sel;
-  $('#dTabs').innerHTML = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = addD(mon, i), k = ds(d); return `<button data-k="${k}" class="${k === sel ? 'on' : ''}${k === t ? ' hoy' : ''}">${D3[i]}<small>${d.getDate()}${S.days[k] ? ' •' : ''}</small></button>`; }).join('');
-  const bl = dayBlocks(sel), used = usedOf(bl);
-  const note = past ? (cust ? 'Registrado: así quedó este día en la bitácora.' : 'Sin registro de este día (se muestra la semana regular).') : cust ? 'Día personalizado: ya no sigue los cambios de la semana regular.' : 'Sigue la semana regular. Si agregás o cambiás un bloque, este día queda personalizado.';
+  $('#dTabs').innerHTML = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = addD(mon, i), k = ds(d); return `<button data-k="${k}" class="${k === sel ? 'on' : ''}${k === t ? ' hoy' : ''}">${D3[i]}<small>${d.getDate()}${S.days[k] ? (S.fix[k] ? ' ✎' : ' •') : ''}</small></button>`; }).join('');
+  const bl = dayBlocks(sel), used = usedOf(bl), nl = nightLine(sel);
+  const note = past ? (cust ? (S.fix[sel] ? (sel < S.start ? 'Registro cargado a mano.' : 'Registro corregido: lo que hiciste difiere de lo planificado.') : 'Registrado según lo planificado. Si hiciste otra cosa, tocá el bloque y corregilo.') : `Sin registro: la bitácora empezó el ${fd(S.start)}. Podés cargar lo que hiciste ese día.`)
+    : cust ? 'Día personalizado: ya no sigue los cambios de la semana regular.' : 'Sigue la semana regular. Si agregás o cambiás un bloque, este día queda personalizado.';
   $('#blocks').innerHTML = `<div class="dayhead"><h2>${DAYS[dow(sd)]} ${sd.getDate()} de ${MESL[sd.getMonth()].toLowerCase()}${sel === t ? ' · hoy' : ''}</h2><span>${fmtM(used)} asignadas · ${fmtM(1440 - used)} libres</span></div><p class="hint">${note}</p>`
+    + (nl ? `<div class="sleep"><span>${nl.text}</span><button data-sl="1">${nl.mins ? 'Corregir sueño' : 'Registrar sueño'}</button></div>` : '')
     + (cust && !past ? '<button class="ghost rst" data-r="1">Volver a la semana regular</button>' : '')
+    + (past && !cust ? '<button class="ghost rst" data-cp="1">Copiar la semana regular a este día</button>' : '')
     + listHTML(bl, dayBlocks(ds(addD(sd, -1))), dayBlocks(ds(addD(sd, 1))), sel === t);
 }
 function renderTpl() {
@@ -177,7 +202,9 @@ $('#dTabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { se
 $('#wTabs').onclick = e => { if (e.target.dataset.d != null) { wd = +e.target.dataset.d; renderTpl(); } };
 $('#blocks').onclick = e => {
   const g = e.target.closest('[data-new]'), b = e.target.closest('[data-b]');
-  if (e.target.closest('[data-r]')) { if (confirm('¿Volver a la semana regular para este día? Se pierden sus cambios.')) { delete S.days[sel]; save(); renderAll(); } }
+  if (e.target.closest('[data-sl]')) { const n = nightLine(sel); openBlock('d', null, [n.from, n.to], { date: ds(addD(pdt(sel), -1)), a: 'sueno' }); }
+  else if (e.target.closest('[data-cp]')) { S.days[sel] = proj(sel).map(clone); markFix(sel); save(); renderAll(); }
+  else if (e.target.closest('[data-r]')) { if (confirm('¿Volver a la semana regular para este día? Se pierden sus cambios.')) { delete S.days[sel]; save(); renderAll(); } }
   else if (g) openBlock('d', null, g.dataset.new.split('-').map(Number));
   else if (b) openBlock('d', dayBlocks(sel).find(x => x.id === b.dataset.b));
 };
@@ -191,17 +218,18 @@ $('#addW').onclick = () => openBlock('t', null, firstGap(tplDay(wd)));
 /* ---------- Editor de bloques ---------- */
 const dB = $('#dB');
 const chips = () => { $('#bD').innerHTML = D3.map((n, i) => `<button type="button" data-d="${i}" class="${selDays.has(i) ? 'on' : ''}">${n}</button>`).join(''); };
-function openBlock(mode, b, pre) {
-  ctx = { mode, b: b || null, date: sel }; const s = b ? b.s : pre ? pre[0] : 480, e = b ? b.e : pre ? pre[1] : 540;
+function openBlock(mode, b, pre, opt) {
+  ctx = { mode, b: b || null, date: (opt && opt.date) || sel, keep: !!opt }; const s = b ? b.s : pre ? pre[0] : 480, e = b ? b.e : pre ? pre[1] : 540;
   $('#dBt').textContent = b ? 'Editar bloque' : 'Nuevo bloque';
   $('#bA').innerHTML = S.activities.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
-  $('#bA').value = b ? b.a : (S.activities.find(a => !a.center) || S.activities[0] || {}).id;
+  $('#bA').value = b ? b.a : (opt && opt.a) || (S.activities.find(a => !a.center && a.id !== 'sueno') || S.activities[0] || {}).id;
   $('#bT').value = b ? b.t || '' : ''; $('#bS').value = hm(s); $('#bE').value = e >= 1440 ? '00:00' : hm(e);
   $('#bWK').hidden = mode !== 't'; $('#bDT').hidden = mode !== 'd';
   const r = b && b.src === 'r' ? S.rec.find(x => x.id === b.id) : null;
-  if (mode === 't') { selDays = new Set([b ? b.d : wd]); chips(); } else { $('#bF').value = sel; $('#bU').value = ''; $('#bR').value = r ? r.k : ''; }
+  if (mode === 't') { selDays = new Set([b ? b.d : wd]); chips(); } else { $('#bF').value = ctx.date; $('#bU').value = ''; $('#bR').value = r ? r.k : ''; }
+  const past = mode === 'd' && ctx.date < ds(today()); $('#bUw').hidden = past; $('#bRw').hidden = past;
   const h = $('#bH'); h.classList.remove('err');
-  h.textContent = (mode === 't' ? 'Reemplaza lo que haya en ese horario de la semana regular.' : r ? 'Es un evento que se repite: al guardar cambia en todas sus repeticiones.' : 'Reemplaza lo que haya en ese horario, solo en la fecha elegida.') + ' Si "Hasta" es anterior a "Desde", el bloque sigue después de medianoche.';
+  h.textContent = (mode === 't' ? 'Reemplaza lo que haya en ese horario de la semana regular.' : past ? 'Corregí lo que realmente hiciste: reemplaza lo que haya en ese horario de ese día.' : r ? 'Es un evento que se repite: al guardar cambia en todas sus repeticiones.' : 'Reemplaza lo que haya en ese horario, solo en la fecha elegida.') + ' Si "Hasta" es anterior a "Desde", el bloque sigue después de medianoche.';
   $('#bDel').hidden = !b; dB.showModal();
 }
 $('#bD').onclick = e => {
@@ -212,9 +240,9 @@ $('#bX').onclick = () => dB.close();
 function bErr(m) { const h = $('#bH'); h.textContent = m; h.classList.add('err'); }
 function removeOrig() {
   const b = ctx.b; if (!b) return;
-  if (b.src === 'r') S.rec = S.rec.filter(r => r.id !== b.id); else S.days[ctx.date] = custom(ctx.date).filter(x => x.id !== b.id);
+  if (b.src === 'r') S.rec = S.rec.filter(r => r.id !== b.id); else { S.days[ctx.date] = custom(ctx.date).filter(x => x.id !== b.id); markFix(ctx.date); }
 }
-const put = (k, nb) => { S.days[k] = place(custom(k), nb); };
+const put = (k, nb) => { S.days[k] = place(custom(k), nb); markFix(k); };
 $('#fB').onsubmit = e => {
   e.preventDefault();
   const a = $('#bA').value, t = $('#bT').value.trim(), s = toMin($('#bS').value); let en = toMin($('#bE').value);
@@ -235,7 +263,7 @@ $('#fB').onsubmit = e => {
       put(ds(d), { id: uid(), s, e: cross ? 1440 : en, a, t });
       if (cross) put(ds(addD(d, 1)), { id: uid(), s: 0, e: en, a, t });
     }
-    sel = f;
+    if (!ctx.keep) sel = f;
   }
   save(); dB.close(); renderAll();
 };
@@ -370,5 +398,5 @@ function tick() {
   renderNow(); const m = nowMin();
   if (m !== lastMin && !busy) { lastMin = m; renderBit(); }
 }
-freeze(); renderAll(); resize(); setInterval(tick, 1000); requestAnimationFrame(draw);
+freeze(); save(); renderAll(); resize(); setInterval(tick, 1000); requestAnimationFrame(draw);
 })();

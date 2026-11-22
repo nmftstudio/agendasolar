@@ -103,3 +103,4 @@ menu{display:flex;gap:8px;justify-content:flex-end;margin:10px 0 0;padding:0}
 .seg2 span{display:block;width:100%}
 .col small{font-size:10px;color:var(--mut);height:12px;line-height:12px}
 .rst{margin:0 0 12px}
+.sleep{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--pn);border:1px solid var(--line);border-left:6px solid #cfd8ff;border-radius:10px;padding:8px 12px;margin:0 0 12px;font-size:14px}
