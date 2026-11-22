@@ -48,7 +48,8 @@ Existe un planeta de **Sueño nocturno** con una línea de resumen por día ("No
 | **Semana** | Edición de la semana regular, día por día. |
 | **Planetas** | Alta, edición y baja de planetas. |
 | **Balance** | Barras de reparto por planeta, gráfico apilado por día o mes, respaldo de datos y cronograma en PDF. |
-| **Cosmos** | El cielo real sobre tu ubicación: Sol, Luna, planetas, estaciones y un mapa de estrellas. |
+| **Cosmos** | El cielo real sobre tu ubicación: Sol, Luna, planetas, estaciones, un mapa de estrellas y el **Oráculo**. |
+| **Notas** | Diario con fecha, hora y minuto, y una línea de tiempo para recorrerlo. |
 
 Cielo y Balance se pueden ver por **Semana, Mes o Año**, con navegación entre períodos.
 
@@ -70,6 +71,28 @@ La ubicación se configura con el botón **Ubicación** (geolocalización del di
 
 **Precisión:** usa elementos orbitales de baja resolución. En pruebas contra valores conocidos de 2026, equinoccios y solsticios coinciden en minutos, y las fases lunares en unos 10 minutos. Las constelaciones se asignan por la longitud eclíptica, así que son aproximadas cerca de los límites.
 
+### Oráculo: qué es propicio y qué conviene con cuidado
+
+Al final de la pestaña **Cosmos**, una lectura simbólica del momento que elegiste (la fecha de arriba y la hora del deslizador del mapa; si estás en "hoy" y no tocaste el deslizador, sigue la hora actual). Muestra un clima general (fluido, mixto o exigente), las claves astrológicas del momento y dos listas: **Propicio** y **Mejor con cuidado**. Combina:
+
+- **Fase lunar** (8 fases) y **signo de la Luna**.
+- **Signo del Sol** como tema de fondo.
+- **Regente del día** y **hora planetaria** (según el amanecer y el atardecer de tu ubicación).
+- **Aspectos de la Luna** a Mercurio, Venus, Marte, Júpiter y Saturno (conjunción, sextil, cuadratura, trígono y oposición).
+- **Retrogradaciones** de los cinco planetas.
+
+Usa el zodíaco **tropical** (los signos), distinto de las constelaciones que muestra el resto de Cosmos. Es una lectura para reflexionar, no una predicción. Vive en `js/oraculo.js`, sin dependencias, y se apoya en el motor de `cosmos.js`.
+
+### Notas: un diario del momento
+
+Una pestaña aparte para escribir texto libre que queda registrado con **fecha, día, hora y minuto**.
+
+- **Escribir:** cuadro de texto y botón **Guardar nota** (o `Ctrl + Enter`). Si no tocás la fecha, queda con la hora exacta en que guardás; si querés cargar algo que pasó antes, cambiás la fecha y hora y queda en su lugar.
+- **Línea de tiempo:** debajo del cuadro, las notas aparecen de la más nueva a la más vieja, agrupadas por día ("hoy", "ayer") y con la hora de cada una. Cada nota muestra además la fase y el signo de la Luna de ese momento.
+- **Encontrar:** buscador (ignora mayúsculas y tildes), selector de día y un mapa de los últimos 30 días donde los días con notas se iluminan; tocás uno para ver solo ese día.
+- **Editar o borrar:** tocá una nota para corregir el texto, cambiarle la fecha y hora o eliminarla.
+- **Exportar:** botón **Exportar notas (.txt)**. Además, las notas viajan dentro del respaldo JSON de *Balance*.
+
 ## Funcionalidades
 
 - Sistema solar animado: órbitas elípticas, tamaño de planeta según las horas, estrellas titilantes y estrellas fugaces. Respeta `prefers-reduced-motion`.
@@ -78,12 +101,13 @@ La ubicación se configura con el botón **Ubicación** (geolocalización del di
 - Balance con porcentaje de tiempo por planeta, incluyendo "Sin asignar".
 - **Exportar / importar** respaldo en JSON (`orbita-AAAA-MM-DD.json`). La importación valida y limpia el archivo, y rechaza los que no son de Órbita.
 - Migración automática desde versiones anteriores de los datos (`orbita.v4`).
-- Cronograma semanal en **PDF** y pestaña **Cosmos** con el cielo de tu ubicación.
+- Cronograma semanal en **PDF** y pestaña **Cosmos** con el cielo de tu ubicación y su **Oráculo**.
+- Pestaña **Notas**: diario con fecha y hora, búsqueda y línea de tiempo.
 - Interfaz oscura, mobile-first, con barra de pestañas inferior en móvil y superior en escritorio. Soporta pantallas con notch.
 
 ## Datos y privacidad
 
-Todo se guarda en `localStorage`: la agenda bajo la clave `orbita.v5` y la ubicación del cielo bajo `orbita.geo` (esta no entra en el respaldo JSON). No hay backend, cuentas ni seguimiento, y la ubicación nunca sale del dispositivo.
+Todo se guarda en `localStorage`: la agenda (con las notas) bajo la clave `orbita.v5` y la ubicación del cielo bajo `orbita.geo` (esta no entra en el respaldo JSON). No hay backend, cuentas ni seguimiento, y la ubicación nunca sale del dispositivo.
 
 > ⚠️ Al ser `localStorage`, borrar los datos del navegador borra tu agenda. Usá **Exportar datos** (pestaña *Balance*) para hacer respaldos, sobre todo antes de cambiar de dispositivo.
 
@@ -93,7 +117,7 @@ Al abrir la app por primera vez se carga una **semana de ejemplo** con planetas 
 
 - HTML, CSS y JavaScript **vanilla** (sin frameworks ni build)
 - `canvas` 2D para el sistema solar, el mapa del cielo y la Luna
-- Generador de PDF propio (`js/pdf.js`) y motor astronómico propio (`js/cosmos.js`), sin dependencias
+- Generador de PDF propio (`js/pdf.js`), motor astronómico propio (`js/cosmos.js`) y oráculo (`js/oraculo.js`), sin dependencias
 - `<dialog>` nativo para los editores
 - Hosting estático en GitHub Pages; apto para empaquetar como APK Android vía WebView
 
@@ -107,6 +131,7 @@ agendasolar/
 ├── js/
 │   ├── app.js        # la app
 │   ├── cosmos.js     # astronomía: Sol, Luna, planetas, estrellas
+│   ├── oraculo.js    # lectura simbólica del momento cósmico
 │   └── pdf.js        # generador del cronograma en PDF
 └── README.md
 ```
@@ -129,6 +154,7 @@ npx serve .   # o abrir index.html directamente en el navegador
   "rec":  [{ "k": "m|y", "m", "dd", "s", "e", "a", "t" }], // eventos que se repiten
   "frozen": "AAAA-MM-DD",  // último día ya registrado
   "fix":  { "AAAA-MM-DD": 1 }, // días corregidos a mano
+  "notes": [{ "id", "t", "x" }], // notas: t = instante en ms (fecha y hora), x = texto
   "start": "AAAA-MM-DD",   // inicio de la bitácora
   "v": 6
 }

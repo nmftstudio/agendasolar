@@ -14,7 +14,7 @@ main{padding-top:10px;padding-bottom:24px}
 .view{display:none}.view.on{display:block}
 button,.btn{font:inherit;font-size:14px;color:var(--tx);background:var(--pn2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}
 button:hover,.btn:hover{border-color:var(--a)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--c);outline-offset:2px}
 .go{background:var(--a);color:#03130f;border-color:var(--a);font-weight:700}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;background:rgba(10,15,23,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabs button{flex:1;min-width:0;padding:0 2px;height:var(--tabh);border:0;border-radius:0;background:none;color:var(--mut);font-size:13px}
@@ -70,6 +70,7 @@ dialog h3{font-size:18px;margin-bottom:14px}
 dialog label{display:block;margin:0 0 12px;color:var(--mut);font-size:13px}
 dialog input:not([type=checkbox]),dialog select{display:block;width:100%;margin-top:4px;padding:10px;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:8px}
 dialog input[type=color]{height:46px;padding:3px}
+dialog textarea{display:block;width:100%;margin-top:4px;padding:10px;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:8px;resize:vertical}
 .chk{display:flex;gap:10px;align-items:center;font-size:15px!important;color:var(--tx)!important}
 .chk input{width:22px;height:22px;accent-color:var(--a)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -84,7 +85,7 @@ menu{display:flex;gap:8px;justify-content:flex-end;margin:10px 0 0;padding:0}
 @media(min-width:821px){
   body{padding-bottom:0}
   .tabs{position:sticky;top:0;bottom:auto;justify-content:center;border-top:0;border-bottom:1px solid var(--line)}
-  .tabs button{flex:0 0 150px;height:48px}
+  .tabs button{flex:1 1 0;max-width:150px;height:48px}
   #sky{aspect-ratio:16/10}
   .fab{bottom:16px}
   .rev{grid-template-columns:200px 1fr 200px}.rev small{grid-column:auto;text-align:right}
@@ -135,5 +136,51 @@ menu{display:flex;gap:8px;justify-content:flex-end;margin:10px 0 0;padding:0}
 .skyctl{display:flex;gap:10px;align-items:center;margin:12px auto 4px;max-width:560px}
 .skyctl input{flex:1;accent-color:var(--a)}
 .skyctl span{font:14px var(--mono);min-width:44px;text-align:center}
-@media(max-width:420px){.tabs button{font-size:12px}}
+@media(max-width:420px){.tabs button{font-size:11px}}
 @media(min-width:821px){.cards{grid-template-columns:1fr 1fr;align-items:start}}
+
+/* Notas: registro con fecha y hora en línea de tiempo */
+.nbox{background:var(--pn);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0 14px}
+.nbox textarea{display:block;width:100%;min-height:96px;resize:vertical;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.nbox .hint{margin:8px 0 0}
+.nbar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+.nbar label{flex:1;min-width:190px;color:var(--mut);font-size:13px}
+.nbar input,.nfilter input{display:block;width:100%;margin-top:4px;font:inherit;font-size:14px;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px}
+.nfilter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nfilter input{margin:0;flex:1;min-width:150px}
+.nfilter input[type=date]{flex:0 0 auto;min-width:0;width:auto}
+.nmap{display:flex;gap:3px;flex-wrap:wrap;margin:0 0 6px}
+.nmap button{width:24px;height:24px;min-height:0;padding:0;border-radius:5px;background:var(--pn2)}
+.nmap .l1{background:rgba(39,245,201,.3)}.nmap .l2{background:rgba(39,245,201,.6)}.nmap .l3{background:var(--a)}
+.nmap .on{outline:2px solid var(--c);outline-offset:1px}
+.nday{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:20px 0 10px;font:700 13px var(--mono);color:var(--c);letter-spacing:.04em;text-transform:uppercase}
+.nday small{color:var(--mut);font-weight:500;text-transform:none;font-size:12px}
+.nitem{position:relative;display:grid;grid-template-columns:48px 1fr;gap:0 18px;width:100%;text-align:left;padding:0 0 14px;border:0;border-radius:0;background:none;min-height:0}
+.nitem::before{content:"";position:absolute;left:56px;top:8px;bottom:-8px;width:2px;background:var(--line)}
+.nitem::after{content:"";position:absolute;left:51px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--a);box-shadow:0 0 8px var(--a)}
+.ngrp .nitem:last-of-type::before{display:none}
+.nitem:hover{border:0}
+.nt{display:block;font:600 13px var(--mono);color:var(--mut);padding-top:3px;text-align:right}
+.nb{display:block;background:var(--pn);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+.nitem:hover .nb{border-color:var(--a)}
+.nx{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.nm{display:block;margin-top:6px;color:var(--mut);font:12px var(--mono)}
+#nMore{width:100%;margin-top:6px}
+
+/* Oráculo */
+.orc{background:var(--pn);border:1px solid var(--line);border-radius:12px;padding:14px}
+.orc-head{display:grid;gap:2px;margin-bottom:10px}
+.orc-head b{font:700 16px var(--mono)}
+.orc-head span{color:var(--mut);font-size:14px}
+.orc-head.ok b{color:var(--a)}.orc-head.low b{color:var(--b)}.orc-head.mix b{color:var(--c)}
+.orc-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.orc-chips span{font:12px var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--pn2)}
+.orc-chips .bad{border-color:var(--b);color:var(--b)}
+.orc-cols{display:grid;gap:10px}
+.orc-col{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.orc-col h4{margin:0 0 8px;font:700 12px var(--mono);letter-spacing:.1em}
+.orc-col ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.orc-col.si{border-color:rgba(39,245,201,.35)}.orc-col.si h4{color:var(--a)}
+.orc-col.no{border-color:rgba(255,61,129,.35)}.orc-col.no h4{color:var(--b)}
+.orc>.hint:last-child{margin-bottom:0}
+@media(min-width:821px){.orc-cols{grid-template-columns:1fr 1fr;align-items:start}}

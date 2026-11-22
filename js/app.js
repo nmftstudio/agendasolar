@@ -60,7 +60,7 @@ function seed() {
     const [r, a, t] = x.split(':'), [s, e] = r.split('-').map(v => Math.round(v * 60));
     tpl.push({ id: 'b' + tpl.length, d, s, e, a, t: t || '' });
   }));
-  return { activities: ACTS.map(([id, name, color, c]) => ({ id, name, color, center: !!c })), tpl, days: {}, rec: [], frozen: yesterday(), fix: {}, start: ds(today()), v: 6 };
+  return { activities: ACTS.map(([id, name, color, c]) => ({ id, name, color, center: !!c })), tpl, days: {}, rec: [], frozen: yesterday(), fix: {}, start: ds(today()), notes: [], v: 6 };
 }
 /* Modelo: tpl = semana regular; days[fecha] = día personalizado o ya registrado; rec = eventos que se repiten (cada mes / cada año) */
 function clean(d) {
@@ -73,7 +73,8 @@ function clean(d) {
   const rec = (d.rec || []).filter(r => ok(r) && (r.k === 'y' || r.k === 'm')).map((r, i) => ({ id: 'r' + i, k: r.k, m: r.m | 0, dd: r.dd | 0, s: r.s | 0, e: r.e | 0, a: r.a, t: tt(r) }));
   const frozen = DRE.test(d.frozen) ? d.frozen : yesterday(), fix = {}, past = Object.keys(days).filter(k => k <= ds(today())).sort();
   Object.keys(d.fix || {}).forEach(k => { if (DRE.test(k)) fix[k] = 1; });
-  return { activities, tpl, days, rec, frozen, fix, v: (d.v | 0) || 5, start: DRE.test(d.start) ? d.start : (past[0] || ds(addD(pdt(frozen), 1))) };
+  const notes = (Array.isArray(d.notes) ? d.notes : []).filter(n => n && Number.isFinite(+n.t) && typeof n.x === 'string' && n.x.trim()).map((n, i) => ({ id: 'q' + i, t: +n.t, x: n.x.slice(0, 4000) }));
+  return { activities, tpl, days, rec, notes, frozen, fix, v: (d.v | 0) || 5, start: DRE.test(d.start) ? d.start : (past[0] || ds(addD(pdt(frozen), 1))) };
 }
 function migrate(s) { // v5 -> v6: suma el planeta de sueño y sus noches en la semana regular (solo si el horario está libre)
   if (s.v >= 6) return s;
@@ -139,7 +140,7 @@ function recalc() {
 function show(v) {
   $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  try { window.scrollTo(0, 0); } catch (e) {} resize(); if (v === 'cos') renderCos();
+  try { window.scrollTo(0, 0); } catch (e) {} resize(); if (v === 'cos') renderCos(); if (v === 'not') { if (nAuto) $('#nWhen').value = dI(new Date()); renderNotes(); }
 }
 $('.tabs').onclick = e => { if (e.target.dataset.v) show(e.target.dataset.v); };
 function renderPer() {
@@ -517,6 +518,7 @@ function drawMap() {
   if (sk.sun.alt > -1) { const [x, y] = P(Math.max(sk.sun.alt, 0), sk.sun.az); const g = c.createRadialGradient(x, y, 1, x, y, 20); g.addColorStop(0, '#fff7c2'); g.addColorStop(.35, '#ffd23f'); g.addColorStop(1, 'rgba(255,210,63,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); c.fillStyle = '#e6f1ff'; c.font = '11px ' + MONO; c.fillText('Sol', x + 14, y + 4); }
   const a = sk.sun.alt, up = (sk.moon.alt > 0 ? ['la Luna'] : []).concat(sk.planets.filter(p => p.alt > 0).map(p => p.name));
   $('#cInfo').textContent = `${hm(min)} · ${a > 0 ? 'de día' : a > -6 ? 'crepúsculo civil' : a > -12 ? 'crepúsculo náutico' : a > -18 ? 'crepúsculo astronómico' : 'noche cerrada'}. Sobre el horizonte: ${up.length ? up.join(', ') : 'ni la Luna ni los planetas'}.`;
+  renderOracle(t);
 }
 if (window.ResizeObserver) new ResizeObserver(drawMap).observe(cm);
 const cgo = k => { cdate = k; cmin = null; renderCos(); };
@@ -543,14 +545,98 @@ $('#fL').onsubmit = e => {
   dL.close(); renderCos();
 };
 
+/* ---------- Oráculo: lectura simbólica del momento elegido en Cosmos ---------- */
+let lastOr = '';
+function renderOracle(t) {
+  const box = $('#cOr'); if (!box) return;
+  if (!window.Oraculo || !CD) { box.innerHTML = '<p class="hint">No se pudo cargar el oráculo.</p>'; return; }
+  let r; try { r = Oraculo.read({ t, rise: CD.sun.rise, set: CD.sun.set }); } catch (e) { console.error(e); box.innerHTML = '<p class="hint">No se pudo calcular la lectura de este momento.</p>'; return; }
+  const d = new Date(t), li = a => a.map(x => `<li>${esc(x)}</li>`).join('');
+  const h = `<div class="orc-head ${r.tone.id}"><b>${esc(r.tone.title)} · ${D3[dow(d)]} ${d.getDate()} ${MES[d.getMonth()]} · ${pad(d.getHours())}:${pad(d.getMinutes())}</b><span>${esc(r.tone.text)}</span></div>`
+    + `<div class="orc-chips">${r.chips.map(c => `<span${c.bad ? ' class="bad"' : ''}>${esc(c.t)}</span>`).join('')}</div>`
+    + `<div class="orc-cols"><div class="orc-col si"><h4>PROPICIO</h4><ul>${li(r.si)}</ul></div><div class="orc-col no"><h4>MEJOR CON CUIDADO</h4><ul>${li(r.no)}</ul></div></div>`
+    + `<p class="hint">${esc(r.theme)}</p><p class="hint">Lectura simbólica para reflexionar, no una predicción. Usa los signos del zodíaco tropical y el cielo calculado para tu ubicación.</p>`;
+  if (h !== lastOr) { lastOr = h; box.innerHTML = h; }
+}
+
+/* ---------- Notas: registro con fecha, hora y minuto, en línea de tiempo ---------- */
+const dI = d => `${ds(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const NMAX = 4000, NPAGE = 60;
+let nAuto = true, nFilter = '', nDay = '', nLimit = NPAGE, nEdit = null;
+const moonTag = t => { if (!window.Cosmos || !window.Oraculo) return ''; try { return Oraculo.moonTag(t); } catch (e) { return ''; } };
+function noteList() {
+  const q = norm(nFilter.trim());
+  return S.notes.filter(n => (!nDay || ds(new Date(n.t)) === nDay) && (!q || norm(n.x).includes(q))).sort((a, b) => b.t - a.t);
+}
+function renderNotes() {
+  const all = S.notes, list = noteList(), shown = list.slice(0, nLimit), tk = ds(today()), yk = yesterday(), yr = today().getFullYear(), per = {}, cnt = {};
+  list.forEach(n => { const k = ds(new Date(n.t)); per[k] = (per[k] || 0) + 1; });
+  all.forEach(n => { const k = ds(new Date(n.t)); cnt[k] = (cnt[k] || 0) + 1; });
+  $('#nCount').textContent = all.length ? `${all.length} ${all.length === 1 ? 'nota' : 'notas'}${list.length !== all.length ? ` · ${list.length} con este filtro` : ''}` : '';
+  $('#nMap').innerHTML = Array.from({ length: 30 }, (_, i) => {
+    const d = addD(today(), i - 29), k = ds(d), c = cnt[k] || 0;
+    return `<button type="button" data-k="${k}" class="${c ? 'l' + Math.min(3, c) : ''}${k === nDay ? ' on' : ''}" title="${d.getDate()} ${MES[d.getMonth()]}${c ? ' · ' + c + (c === 1 ? ' nota' : ' notas') : ''}" aria-label="${d.getDate()} de ${MESL[d.getMonth()].toLowerCase()}${c ? ', ' + c + (c === 1 ? ' nota' : ' notas') : ''}"></button>`;
+  }).join('');
+  let h = '', lastK = '';
+  shown.forEach(n => {
+    const d = new Date(n.t), k = ds(d), mt = moonTag(n.t);
+    if (k !== lastK) {
+      if (lastK) h += '</div>'; lastK = k;
+      h += `<div class="ngrp"><div class="nday"><span>${DAYS[dow(d)]} ${d.getDate()} de ${MESL[d.getMonth()].toLowerCase()}${d.getFullYear() !== yr ? ' de ' + d.getFullYear() : ''}${k === tk ? ' · hoy' : k === yk ? ' · ayer' : ''}</span><small>${per[k]} ${per[k] === 1 ? 'nota' : 'notas'}</small></div>`;
+    }
+    h += `<button type="button" class="nitem" data-n="${n.id}"><span class="nt">${pad(d.getHours())}:${pad(d.getMinutes())}</span><span class="nb"><span class="nx">${esc(n.x)}</span>${mt ? `<span class="nm">${esc(mt)}</span>` : ''}</span></button>`;
+  });
+  if (lastK) h += '</div>';
+  if (list.length > shown.length) h += `<button type="button" id="nMore">Mostrar más (${list.length - shown.length})</button>`;
+  if (!list.length) h = `<p class="hint">${all.length ? 'Ninguna nota coincide con este filtro.' : 'Todavía no hay notas. Escribí la primera arriba: queda guardada con su fecha, hora y minuto.'}</p>`;
+  $('#nTl').innerHTML = h;
+}
+$('#nForm').onsubmit = e => {
+  e.preventDefault(); const x = $('#nText').value.trim(); if (!x) { $('#nText').focus(); return; }
+  let t = Date.now(); if (!nAuto) { const v = new Date($('#nWhen').value).getTime(); if (Number.isFinite(v)) t = v; }
+  S.notes.push({ id: uid(), t, x: x.slice(0, NMAX) }); save();
+  $('#nText').value = ''; nAuto = true; $('#nWhen').value = dI(new Date());
+  nFilter = ''; nDay = ''; nLimit = NPAGE; $('#nQ').value = ''; $('#nD').value = ''; renderNotes();
+};
+$('#nText').onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); $('#nAdd').click(); } };
+$('#nWhen').oninput = () => { nAuto = false; };
+$('#nNow').onclick = () => { nAuto = true; $('#nWhen').value = dI(new Date()); };
+$('#nQ').oninput = e => { nFilter = e.target.value; nLimit = NPAGE; renderNotes(); };
+$('#nD').onchange = e => { nDay = DRE.test(e.target.value) ? e.target.value : ''; nLimit = NPAGE; renderNotes(); };
+$('#nClr').onclick = () => { nFilter = ''; nDay = ''; nLimit = NPAGE; $('#nQ').value = ''; $('#nD').value = ''; renderNotes(); };
+$('#nMap').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; nDay = nDay === b.dataset.k ? '' : b.dataset.k; $('#nD').value = nDay; nLimit = NPAGE; renderNotes(); };
+$('#nTl').onclick = e => {
+  if (e.target.closest('#nMore')) { nLimit += NPAGE; renderNotes(); return; }
+  const b = e.target.closest('[data-n]'); if (b) openNote(b.dataset.n);
+};
+const dN = $('#dN');
+function openNote(id) {
+  const n = S.notes.find(x => x.id === id); if (!n) return; nEdit = n;
+  $('#eT').value = n.x; $('#eW').value = dI(new Date(n.t)); $('#eM').textContent = moonTag(n.t); dN.showModal();
+}
+$('#eX').onclick = () => dN.close();
+$('#fN').onsubmit = e => {
+  e.preventDefault(); const x = $('#eT').value.trim(), v = new Date($('#eW').value).getTime(); if (!x || !nEdit) return;
+  nEdit.x = x.slice(0, NMAX); if (Number.isFinite(v)) nEdit.t = v; save(); dN.close(); renderNotes();
+};
+$('#eDel').onclick = () => { if (!nEdit || !confirm('¿Eliminar esta nota?')) return; S.notes = S.notes.filter(n => n !== nEdit); save(); dN.close(); renderNotes(); };
+$('#nTxt').onclick = () => {
+  if (!S.notes.length) { alert('Todavía no hay notas para exportar.'); return; }
+  const txt = S.notes.slice().sort((a, b) => a.t - b.t).map(n => { const d = new Date(n.t); return `[${ds(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}] ${n.x}`; }).join('\n\n') + '\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+  a.download = 'orbita-notas-' + ds(today()) + '.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
 /* ---------- Arranque ---------- */
-function renderAll() { recalc(); renderHead(); renderPer(); renderLegend(); renderActs(); renderBal(); renderBit(); renderTpl(); lastNow = ''; renderNow(); if ($('#v-cos').classList.contains('on')) renderCos(); }
+function renderAll() { recalc(); renderHead(); renderPer(); renderLegend(); renderActs(); renderBal(); renderBit(); renderTpl(); lastNow = ''; renderNow(); if ($('#v-cos').classList.contains('on')) renderCos(); if ($('#v-not').classList.contains('on')) renderNotes(); }
 function tick() {
   const k = ds(today()), busy = document.querySelector('dialog[open]');
   if (k !== lastDay && !busy) { lastDay = k; freeze(); renderAll(); return; }
   renderNow(); const m = nowMin();
+  if (nAuto && !busy && $('#v-not').classList.contains('on') && document.activeElement !== $('#nWhen')) { const v = dI(new Date()); if ($('#nWhen').value !== v) $('#nWhen').value = v; }
   if (m !== lastMin && !busy) { lastMin = m; renderBit(); }
   if (m !== lastCos && !busy && $('#v-cos').classList.contains('on')) { lastCos = m; if (cmin === null && cdate === k) renderCos(); }
 }
-freeze(); save(); renderAll(); resize(); setInterval(tick, 1000); requestAnimationFrame(draw);
+$('#nWhen').value = dI(new Date()); freeze(); save(); renderAll(); resize(); setInterval(tick, 1000); requestAnimationFrame(draw);
 })();

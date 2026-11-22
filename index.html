@@ -19,6 +19,7 @@
   <button data-v="act">Planetas</button>
   <button data-v="bal">Balance</button>
   <button data-v="cos">Cosmos</button>
+  <button data-v="not">Notas</button>
 </nav>
 <main>
   <section id="v-cielo" class="view on">
@@ -70,6 +71,31 @@
     <div class="skyctl"><input type="range" id="cT" min="0" max="1435" step="5" aria-label="Hora del día"><span id="cTl2"></span><button id="cNow">Ahora</button></div>
     <p class="hint" id="cInfo"></p>
     <p class="hint">Mirando hacia arriba: el Este queda a la izquierda. Posiciones calculadas en el dispositivo, sin conexión (precisión de baja resolución: minutos para el Sol, algo más para la Luna). Horarios en la hora de tu dispositivo.</p>
+    <h3 class="sec">Oráculo</h3>
+    <p class="hint">Lectura del momento que elegiste: la fecha de arriba y la hora del deslizador del mapa.</p>
+    <div id="cOr" class="orc"></div>
+  </section>
+  <section id="v-not" class="view">
+    <div class="rowhead"><h2>Notas</h2><span class="hint" id="nCount"></span></div>
+    <form id="nForm" class="nbox">
+      <textarea id="nText" rows="4" maxlength="4000" placeholder="¿Qué querés dejar registrado?" aria-label="Nueva nota"></textarea>
+      <div class="nbar">
+        <label>Fecha y hora<input type="datetime-local" id="nWhen" required></label>
+        <button type="button" id="nNow">Ahora</button>
+        <button class="go" id="nAdd">Guardar nota</button>
+      </div>
+      <p class="hint" id="nLen">Ctrl + Enter para guardar. Si no cambiás la fecha, queda con la hora exacta en que la guardás.</p>
+    </form>
+    <div class="nfilter">
+      <input type="search" id="nQ" placeholder="Buscar en las notas" aria-label="Buscar en las notas">
+      <input type="date" id="nD" aria-label="Ver un día">
+      <button type="button" id="nClr">Ver todas</button>
+    </div>
+    <p class="hint">Últimos 30 días · tocá un día para ver solo ese día.</p>
+    <div id="nMap" class="nmap"></div>
+    <div id="nTl" class="ntl"></div>
+    <div class="data"><button type="button" id="nTxt">Exportar notas (.txt)</button></div>
+    <p class="hint">Las notas se guardan junto con la agenda y viajan en el respaldo de Balance.</p>
   </section>
 </main>
 <dialog id="dB"><form id="fB">
@@ -100,7 +126,15 @@
   <p class="hint" id="lH"></p>
   <menu><button type="button" id="lX">Cancelar</button><button class="go">Guardar</button></menu>
 </form></dialog>
+<dialog id="dN"><form id="fN">
+  <h3>Editar nota</h3>
+  <label>Nota<textarea id="eT" rows="6" maxlength="4000" required></textarea></label>
+  <label>Fecha y hora<input type="datetime-local" id="eW" required></label>
+  <p class="hint" id="eM"></p>
+  <menu><button type="button" class="danger" id="eDel">Eliminar</button><button type="button" id="eX">Cancelar</button><button class="go">Guardar</button></menu>
+</form></dialog>
 <script src="js/cosmos.js"></script>
+<script src="js/oraculo.js"></script>
 <script src="js/pdf.js"></script>
 <script src="js/app.js"></script>
 </body>
