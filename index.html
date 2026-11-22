@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#05070a">
+<title>Órbita · Sistema Solar del Tiempo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><h1>ÓRBITA</h1><span>Tu semana como sistema solar</span></div>
+  <div id="score"><b>000%</b><span>cumplimiento</span></div>
+  <div class="seg" id="modeSeg" role="group" aria-label="Vista del sistema">
+    <button data-m="plan" class="on">Planeado</button>
+    <button data-m="real">Real</button>
+  </div>
+</header>
+<main>
+  <section class="sky">
+    <div class="hud"><span><i>01</i> Cielo</span><span id="clock">09:41</span></div>
+    <canvas id="sky" aria-label="Sistema solar de actividades"></canvas>
+  </section>
+  <section class="card">
+    <h2><i>02</i> Actividades</h2>
+    <p class="hint">Elegí una para pintar el cronograma. Con ▶ medís el tiempo real.</p>
+    <form id="addForm">
+      <input id="aName" placeholder="Nueva actividad" required maxlength="24">
+      <input id="aColor" type="color" value="#27f5c9" aria-label="Color">
+      <button class="go">Agregar</button>
+    </form>
+    <ul id="acts"></ul>
+  </section>
+  <section class="card wide">
+    <div class="rowhead"><h2><i>03</i> Cronograma semanal</h2><button id="clear" class="ghost">Vaciar cronograma</button></div>
+    <p class="hint">Tocá o arrastrá para pintar bloques de 30 minutos. Tocá un bloque de la misma actividad para borrarlo.</p>
+    <div class="gridwrap"><div id="grid"></div></div>
+  </section>
+  <section class="card wide">
+    <div class="rowhead"><h2><i>04</i> Balance de la semana</h2>
+      <div class="weeknav"><button id="prev" aria-label="Semana anterior">‹</button><span id="weekLbl"></span><button id="next" aria-label="Semana siguiente">›</button></div>
+    </div>
+    <div id="review"></div>
+  </section>
+</main>
+<footer>
+  <span>Hecho en Argentina · inspirado en NMFT Studio</span>
+  <span><button id="exp" class="ghost">Exportar datos</button> <label class="ghost btn">Importar<input type="file" id="imp" accept=".json" hidden></label></span>
+</footer>
+<script src="js/app.js"></script>
+</body>
+</html>
